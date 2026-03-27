@@ -1,5 +1,5 @@
 <template>
-  <teleport to="body">
+  <teleport to="#app-root">
     <transition name="sheet">
       <div v-if="modelValue" class="sheet-backdrop" @click.self="emit('update:modelValue', false)">
         <div class="sheet-panel" role="dialog" :aria-label="title">

@@ -1,5 +1,5 @@
 <template>
-  <teleport to="body">
+  <teleport to="#app-root">
     <transition-group name="snack" tag="div" class="snack-stack">
       <div v-for="s in uiStore.snackbars" :key="s.id" class="snackbar">
         <span class="snack-msg">{{ s.message }}</span>

@@ -1,5 +1,5 @@
 <template>
-  <teleport to="body">
+  <teleport to="#app-root">
     <transition name="dialog-anim">
       <div v-if="modelValue" class="dialog-backdrop" @click.self="onBackdropClick">
         <div class="dialog-box" role="dialog" :aria-label="title">
