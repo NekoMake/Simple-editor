@@ -303,6 +303,9 @@ async function doDelete() {
   padding-top: 8px;
   gap: 4px;
 }
+.hero-top-actions :deep(.icon-btn) {
+  color: var(--md-on-primary-container);
+}
 .hero-body {
   display: flex;
   align-items: center;
