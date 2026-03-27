@@ -80,6 +80,7 @@ export interface EditorModuleDefinition {
   displayName: string
   icon: string
   color: string            // M3 容器色（CSS变量名）
+  onColor: string          // M3 容器前景色（CSS变量名）
   extensions: string[]     // 文件扩展名（不含点）
   hasSpecialPreview: boolean
   supportsCompletion: boolean

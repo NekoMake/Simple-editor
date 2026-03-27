@@ -81,7 +81,7 @@
           v-for="mod in MODULE_REGISTRY"
           :key="mod.id"
           class="new-file-btn"
-          :style="{ '--chip-color': `var(${mod.color})` }"
+          :style="{ '--chip-color': `var(${mod.color})`, '--chip-on-color': `var(${mod.onColor})` }"
           @click="startCreate(mod.id as FileFormat)"
         >
           <span class="nfb-icon"><MdIcon :name="mod.icon" /></span>
@@ -400,8 +400,8 @@ async function doDelete() {
   transition: transform .1s;
 }
 .new-file-btn:active { transform: scale(.93); }
-.nfb-icon { color: var(--md-on-primary-container); }
-.nfb-label { font-size: 13px; font-weight: 500; color: var(--md-on-surface); }
+.nfb-icon { color: var(--chip-on-color); }
+.nfb-label { font-size: 13px; font-weight: 500; color: var(--chip-on-color); }
 
 .action-list { display: flex; flex-direction: column; gap: 4px; }
 .action-item {
