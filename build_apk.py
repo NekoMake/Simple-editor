@@ -63,7 +63,7 @@ def success(msg: str) -> None:
 
 def run(cmd: list[str], cwd: Path = PROJECT_ROOT, check: bool = True) -> int:
     info(f"执行: {' '.join(str(c) for c in cmd)}")
-    result = subprocess.run(cmd, cwd=str(cwd))
+    result = subprocess.run(cmd, cwd=str(cwd), shell=(sys.platform == "win32"))
     if check and result.returncode != 0:
         error(f"命令执行失败，退出码：{result.returncode}")
         sys.exit(result.returncode)
@@ -77,6 +77,7 @@ def check_tool(name: str, args: list[str] | None = None) -> bool:
             args or [name, "--version"],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
+            shell=(sys.platform == "win32"),
         )
         return True
     except FileNotFoundError:
