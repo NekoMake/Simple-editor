@@ -55,12 +55,13 @@
 
       <div class="section-header">关于</div>
 
-      <div class="list-item">
+      <div class="list-item" @click="router.push('/about')">
         <MdIcon name="info" style="color:var(--md-on-surface-variant)" />
         <div class="item-content">
-          <div class="item-title">Simple-editor</div>
+          <div class="item-title">简单编辑</div>
           <div class="item-sub">版本 1.0.0 · 多格式文本编辑器</div>
         </div>
+        <MdIcon name="chevron_right" style="color:var(--md-on-surface-variant)" />
       </div>
     </div>
   </div>

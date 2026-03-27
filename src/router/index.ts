@@ -28,6 +28,12 @@ const router = createRouter({
       component: () => import('@/views/FontManagerView.vue'),
       meta: { transition: 'slide-left' },
     },
+    {
+      path: '/about',
+      name: 'about',
+      component: () => import('@/views/AboutView.vue'),
+      meta: { transition: 'slide-left' },
+    },
   ],
 })
 
