@@ -1,0 +1,275 @@
+/* Material 3 Expressive — 组件级样式 */
+
+/* ===== FAB ===== */
+.fab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px; height: 56px;
+  border-radius: var(--md-shape-lg);
+  background: var(--md-primary-container);
+  color: var(--md-on-primary-container);
+  border: none; cursor: pointer;
+  box-shadow: var(--md-elevation-2);
+  transition: box-shadow .2s, transform .1s;
+  position: relative; overflow: hidden;
+}
+.fab:active { transform: scale(.95); }
+.fab.large { width: 96px; height: 96px; border-radius: var(--md-shape-xl); font-size: 36px; }
+.fab.small { width: 40px; height: 40px; border-radius: var(--md-shape-md); font-size: 20px; }
+.fab.extended {
+  width: auto; min-width: 80px; padding: 0 16px;
+  gap: 8px; font: var(--md-font-label-large);
+}
+
+/* ===== Button ===== */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 8px; height: 40px; padding: 0 24px;
+  border-radius: var(--md-shape-full);
+  border: none; cursor: pointer;
+  font: var(--md-font-label-large);
+  position: relative; overflow: hidden;
+  transition: box-shadow .2s, opacity .1s;
+  text-decoration: none;
+}
+.btn-filled {
+  background: var(--md-primary); color: var(--md-on-primary);
+}
+.btn-filled:active { opacity: .9; }
+.btn-tonal {
+  background: var(--md-secondary-container); color: var(--md-on-secondary-container);
+}
+.btn-outlined {
+  background: transparent; color: var(--md-primary);
+  border: 1px solid var(--md-outline);
+}
+.btn-text {
+  background: transparent; color: var(--md-primary);
+  padding: 0 12px;
+}
+.btn:disabled { opacity: .38; pointer-events: none; }
+
+/* ===== Icon Button ===== */
+.icon-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px; border-radius: var(--md-shape-full);
+  border: none; cursor: pointer; background: transparent;
+  color: var(--md-on-surface-variant);
+  position: relative; overflow: hidden;
+  transition: background .15s;
+}
+.icon-btn:hover { background: color-mix(in srgb, var(--md-on-surface-variant) 8%, transparent); }
+.icon-btn:active { background: color-mix(in srgb, var(--md-on-surface-variant) 12%, transparent); }
+.icon-btn.filled {
+  background: var(--md-primary); color: var(--md-on-primary);
+}
+.icon-btn.tonal {
+  background: var(--md-secondary-container); color: var(--md-on-secondary-container);
+}
+
+/* ===== Card ===== */
+.card {
+  background: var(--md-surface-container-low);
+  border-radius: var(--md-shape-md);
+  overflow: hidden;
+}
+.card.elevated { box-shadow: var(--md-elevation-1); }
+.card.filled { background: var(--md-surface-container-highest); }
+.card.outlined {
+  background: var(--md-surface);
+  border: 1px solid var(--md-outline-variant);
+}
+
+/* ===== Chip ===== */
+.chip {
+  display: inline-flex; align-items: center; gap: 8px;
+  height: 32px; padding: 0 16px;
+  border-radius: var(--md-shape-sm);
+  border: 1px solid var(--md-outline);
+  background: transparent; color: var(--md-on-surface-variant);
+  font: var(--md-font-label-large); cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.chip.selected {
+  background: var(--md-secondary-container);
+  color: var(--md-on-secondary-container);
+  border-color: transparent;
+}
+.chip.filter { padding-left: 8px; }
+
+/* ===== Dialog / Bottom Sheet ===== */
+.dialog-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.5);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100;
+  padding: 24px;
+}
+.dialog {
+  background: var(--md-surface-container-high);
+  border-radius: var(--md-shape-xl);
+  padding: 24px;
+  min-width: 280px; max-width: 560px; width: 100%;
+  max-height: 80vh; overflow-y: auto;
+}
+.bottom-sheet {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--md-surface-container-low);
+  border-radius: var(--md-shape-xl) var(--md-shape-xl) 0 0;
+  padding: 16px 24px 32px;
+  z-index: 100;
+  max-height: 85vh; overflow-y: auto;
+}
+.bottom-sheet-handle {
+  width: 32px; height: 4px;
+  background: var(--md-outline-variant);
+  border-radius: 2px;
+  margin: 0 auto 16px;
+}
+
+/* ===== TextField ===== */
+.text-field {
+  display: flex; flex-direction: column; gap: 4px;
+}
+.text-field label {
+  font: var(--md-font-body-small);
+  color: var(--md-on-surface-variant);
+}
+.text-field input, .text-field textarea {
+  background: var(--md-surface-container-highest);
+  border: none; border-radius: var(--md-shape-sm);
+  padding: 12px 16px;
+  color: var(--md-on-surface);
+  font: var(--md-font-body-large);
+  outline: 2px solid transparent;
+  outline-offset: 0;
+  transition: outline-color .15s;
+  width: 100%;
+}
+.text-field input:focus, .text-field textarea:focus {
+  outline-color: var(--md-primary);
+}
+
+/* ===== Divider ===== */
+.divider {
+  height: 1px; background: var(--md-outline-variant);
+  border: none; margin: 0;
+}
+
+/* ===== Snackbar ===== */
+.snackbar {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  background: var(--md-inverse-surface);
+  color: var(--md-inverse-on-surface);
+  border-radius: var(--md-shape-sm);
+  padding: 14px 16px;
+  font: var(--md-font-body-medium);
+  min-width: 280px; max-width: calc(100vw - 48px);
+  box-shadow: var(--md-elevation-3);
+  z-index: 200;
+  display: flex; align-items: center; gap: 12px;
+}
+
+/* ===== Navigation Bar ===== */
+.nav-bar {
+  display: flex; align-items: center; justify-content: space-around;
+  padding: 12px 0 max(12px, env(safe-area-inset-bottom));
+  background: var(--md-surface-container);
+  border-top: 1px solid var(--md-outline-variant);
+}
+.nav-item {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 4px; flex: 1; cursor: pointer;
+  color: var(--md-on-surface-variant);
+  font: var(--md-font-label-medium);
+  transition: color .2s;
+}
+.nav-item .nav-indicator {
+  width: 64px; height: 32px;
+  border-radius: var(--md-shape-full);
+  display: flex; align-items: center; justify-content: center;
+  transition: background .2s;
+}
+.nav-item.active { color: var(--md-on-secondary-container); }
+.nav-item.active .nav-indicator {
+  background: var(--md-secondary-container);
+}
+
+/* ===== Top App Bar ===== */
+.top-app-bar {
+  display: flex; align-items: center;
+  gap: 4px;
+  height: 64px;
+  padding: 0 4px 0 4px;
+  padding-top: env(safe-area-inset-top);
+  background: var(--md-surface);
+  position: sticky; top: 0; z-index: 10;
+}
+.top-app-bar.scrolled {
+  background: var(--md-surface-container);
+  box-shadow: var(--md-elevation-1);
+}
+.top-app-bar .title {
+  flex: 1;
+  font: var(--md-font-title-large);
+  color: var(--md-on-surface);
+  padding: 0 8px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.top-app-bar .actions { display: flex; gap: 0; }
+
+/* ===== Progress ===== */
+.linear-progress {
+  height: 4px; border-radius: 2px;
+  background: var(--md-surface-variant);
+  overflow: hidden;
+}
+.linear-progress-bar {
+  height: 100%; border-radius: 2px;
+  background: var(--md-primary);
+  transition: width .3s ease;
+}
+
+/* ===== Badge ===== */
+.badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--md-error); color: var(--md-on-error);
+  border-radius: var(--md-shape-full);
+  min-width: 16px; height: 16px; padding: 0 4px;
+  font: var(--md-font-label-small);
+}
+
+/* ===== List ===== */
+.list-item {
+  display: flex; align-items: center;
+  min-height: 56px; padding: 8px 16px; gap: 16px;
+  cursor: pointer; position: relative; overflow: hidden;
+}
+.list-item:hover { background: color-mix(in srgb, var(--md-on-surface) 8%, transparent); }
+.list-item:active { background: color-mix(in srgb, var(--md-on-surface) 12%, transparent); }
+.list-item .leading { flex-shrink: 0; }
+.list-item .content { flex: 1; overflow: hidden; }
+.list-item .headline {
+  font: var(--md-font-body-large);
+  color: var(--md-on-surface);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.list-item .supporting {
+  font: var(--md-font-body-medium);
+  color: var(--md-on-surface-variant);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* ===== Material Symbols Icon ===== */
+.icon {
+  font-family: 'Material Symbols Rounded';
+  font-weight: normal; font-style: normal;
+  font-size: 24px; line-height: 1;
+  letter-spacing: normal; text-transform: none;
+  display: inline-block; direction: ltr;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+.icon.filled { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+.icon.sm { font-size: 20px; }
+.icon.lg { font-size: 28px; }

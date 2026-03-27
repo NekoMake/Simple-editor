@@ -1,0 +1,199 @@
+/* ============================================================
+ * Simple-editor 全局样式 — Material 3 Expressive
+ * ============================================================ */
+
+/* Material Symbols Rounded（需要网络） */
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block');
+
+/* highlight.js — 亮色主题，暗色在 main.ts 中动态切换 */
+@import 'highlight.js/styles/github.css';
+
+
+
+/* ---------- CSS 变量：M3 调色板 (light 默认) ---------- */
+:root {
+  /* Primary */
+  --md-primary: #006B71;
+  --md-on-primary: #ffffff;
+  --md-primary-container: #9EEFFF;
+  --md-on-primary-container: #001F24;
+
+  /* Secondary */
+  --md-secondary: #4A6267;
+  --md-on-secondary: #ffffff;
+  --md-secondary-container: #CCE7EC;
+  --md-on-secondary-container: #051F23;
+
+  /* Tertiary */
+  --md-tertiary: #525E7D;
+  --md-on-tertiary: #ffffff;
+  --md-tertiary-container: #DAE2FF;
+  --md-on-tertiary-container: #0E1B37;
+
+  /* Error */
+  --md-error: #BA1A1A;
+  --md-on-error: #ffffff;
+  --md-error-container: #FFDAD6;
+  --md-on-error-container: #410002;
+
+  /* Surface */
+  --md-surface: #F5FAFB;
+  --md-on-surface: #171D1E;
+  --md-surface-variant: #DBE4E6;
+  --md-on-surface-variant: #3F4849;
+  --md-surface-container-lowest: #ffffff;
+  --md-surface-container-low: #EFF4F6;
+  --md-surface-container: #E9EEF0;
+  --md-surface-container-high: #E3E9EA;
+  --md-surface-container-highest: #DEE3E5;
+
+  /* Outline */
+  --md-outline: #6F797A;
+  --md-outline-variant: #BFC8CA;
+
+  /* Inverse */
+  --md-inverse-surface: #2B3133;
+  --md-inverse-on-surface: #ECF2F3;
+  --md-inverse-primary: #82D3DA;
+
+  /* Shadow & Scrim */
+  --md-shadow: #000000;
+  --md-scrim: #000000;
+
+  /* Shape */
+  --md-shape-xs: 4px;
+  --md-shape-sm: 8px;
+  --md-shape-md: 12px;
+  --md-shape-lg: 16px;
+  --md-shape-xl: 28px;
+  --md-shape-full: 50px;
+
+  /* Elevation overlay (light) */
+  --md-elevation-1: 0 1px 2px rgba(0,0,0,.3), 0 1px 3px 1px rgba(0,0,0,.15);
+  --md-elevation-2: 0 1px 2px rgba(0,0,0,.3), 0 2px 6px 2px rgba(0,0,0,.15);
+  --md-elevation-3: 0 4px 8px 3px rgba(0,0,0,.15), 0 1px 3px rgba(0,0,0,.3);
+
+  /* Typography scale */
+  --md-font-display-large: 700 57px/64px var(--app-font-sans, system-ui, sans-serif);
+  --md-font-display-medium: 700 45px/52px var(--app-font-sans, system-ui, sans-serif);
+  --md-font-display-small: 400 36px/44px var(--app-font-sans, system-ui, sans-serif);
+  --md-font-headline-large: 400 32px/40px var(--app-font-sans, system-ui, sans-serif);
+  --md-font-headline-medium: 400 28px/36px var(--app-font-sans, system-ui, sans-serif);
+  --md-font-headline-small: 400 24px/32px var(--app-font-sans, system-ui, sans-serif);
+  --md-font-title-large: 500 22px/28px var(--app-font-sans, system-ui, sans-serif);
+  --md-font-title-medium: 500 16px/24px var(--app-font-sans, system-ui, sans-serif);
+  --md-font-title-small: 500 14px/20px var(--app-font-sans, system-ui, sans-serif);
+  --md-font-body-large: 400 16px/24px var(--app-font-sans, system-ui, sans-serif);
+  --md-font-body-medium: 400 14px/20px var(--app-font-sans, system-ui, sans-serif);
+  --md-font-body-small: 400 12px/16px var(--app-font-sans, system-ui, sans-serif);
+  --md-font-label-large: 500 14px/20px var(--app-font-sans, system-ui, sans-serif);
+  --md-font-label-medium: 500 12px/16px var(--app-font-sans, system-ui, sans-serif);
+  --md-font-label-small: 500 11px/16px var(--app-font-sans, system-ui, sans-serif);
+
+  /* App-level font overrides */
+  --app-font-sans: system-ui, -apple-system, sans-serif;
+  --app-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --app-font-reading: var(--app-font-sans);
+}
+
+/* ---------- Dark 主题变量 ---------- */
+.dark {
+  --md-primary: #82D3DA;
+  --md-on-primary: #003739;
+  --md-primary-container: #004F54;
+  --md-on-primary-container: #9EEFFF;
+
+  --md-secondary: #B1CBD0;
+  --md-on-secondary: #1C3438;
+  --md-secondary-container: #334B4F;
+  --md-on-secondary-container: #CCE7EC;
+
+  --md-tertiary: #BAC6EA;
+  --md-on-tertiary: #243050;
+  --md-tertiary-container: #3A4767;
+  --md-on-tertiary-container: #DAE2FF;
+
+  --md-error: #FFB4AB;
+  --md-on-error: #690005;
+  --md-error-container: #93000A;
+  --md-on-error-container: #FFDAD6;
+
+  --md-surface: #0E1415;
+  --md-on-surface: #DEE3E5;
+  --md-surface-variant: #3F4849;
+  --md-on-surface-variant: #BFC8CA;
+  --md-surface-container-lowest: #090F10;
+  --md-surface-container-low: #171D1E;
+  --md-surface-container: #1B2122;
+  --md-surface-container-high: #252B2C;
+  --md-surface-container-highest: #303637;
+
+  --md-outline: #899294;
+  --md-outline-variant: #3F4849;
+
+  --md-inverse-surface: #DEE3E5;
+  --md-inverse-on-surface: #2B3133;
+  --md-inverse-primary: #006B71;
+}
+
+/* ---------- Reset & Base ---------- */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body, #app, #app-root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+#app-root {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--md-surface);
+  color: var(--md-on-surface);
+  font: var(--md-font-body-large);
+  transition: background-color .25s, color .25s;
+}
+
+/* 禁用双击缩放 */
+body {
+  touch-action: manipulation;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ---------- Scrollbar ---------- */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--md-outline-variant);
+  border-radius: 2px;
+}
+
+/* ---------- Transitions ---------- */
+.fade-enter-active, .fade-leave-active { transition: opacity .2s ease; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
+
+.slide-left-enter-active, .slide-left-leave-active { transition: all .3s cubic-bezier(.4,0,.2,1); }
+.slide-left-enter-from { transform: translateX(100%); opacity: 0; }
+.slide-left-leave-to { transform: translateX(-30%); opacity: 0; }
+
+.slide-up-enter-active, .slide-up-leave-active { transition: all .35s cubic-bezier(.4,0,.2,1); }
+.slide-up-enter-from { transform: translateY(100%); }
+.slide-up-leave-to { transform: translateY(100%); }
+
+/* ---------- Ripple 动画 ---------- */
+@keyframes ripple {
+  to { transform: scale(4); opacity: 0; }
+}
+
+/* ---------- Utility ---------- */
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0,0,0,0); border: 0;
+}
