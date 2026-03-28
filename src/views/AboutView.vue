@@ -16,28 +16,32 @@
       <!-- 关于 section -->
       <div class="section-header">关于</div>
 
-      <a
-        class="list-item"
-        href="https://github.com/NekoMake/Simple-editor"
-        target="_blank"
-        rel="noopener noreferrer"
-        @click.prevent="openGitHub"
-      >
-        <MdIcon name="code" style="color:var(--md-on-surface-variant)" />
-        <div class="item-content">
-          <div class="item-title">查看源代码</div>
-          <div class="item-sub">在 GitHub 上查看源代码</div>
-        </div>
-        <MdIcon name="chevron_right" style="color:var(--md-on-surface-variant)" />
-      </a>
+      <div class="list-card">
+        <a
+          class="list-item"
+          href="https://github.com/NekoMake/Simple-editor"
+          target="_blank"
+          rel="noopener noreferrer"
+          @click.prevent="openGitHub"
+        >
+          <MdIcon name="code" style="color:var(--md-on-surface-variant)" />
+          <div class="item-content">
+            <div class="item-title">查看源代码</div>
+            <div class="item-sub">在 GitHub 上查看源代码</div>
+          </div>
+          <MdIcon name="chevron_right" style="color:var(--md-on-surface-variant)" />
+        </a>
 
-      <div class="list-item" @click="showLicenses = true">
-        <MdIcon name="copyright" style="color:var(--md-on-surface-variant)" />
-        <div class="item-content">
-          <div class="item-title">开放源代码许可证</div>
-          <div class="item-sub">查看本应用所使用的第三方开源库及其许可证信息</div>
+        <div class="list-divider"></div>
+
+        <div class="list-item" @click="showLicenses = true">
+          <MdIcon name="copyright" style="color:var(--md-on-surface-variant)" />
+          <div class="item-content">
+            <div class="item-title">开放源代码许可证</div>
+            <div class="item-sub">查看本应用所使用的第三方开源库及其许可证信息</div>
+          </div>
+          <MdIcon name="chevron_right" style="color:var(--md-on-surface-variant)" />
         </div>
-        <MdIcon name="chevron_right" style="color:var(--md-on-surface-variant)" />
       </div>
 
     </div>
@@ -164,21 +168,41 @@ const LICENSES = [
   padding: 20px 16px 4px;
 }
 
+/* ── List card ───────────────────────────── */
+.list-card {
+  margin: 0 16px 8px;
+  background: var(--md-surface-container-low);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.list-divider {
+  height: 1px;
+  background: var(--md-outline-variant);
+  margin: 0 16px;
+  opacity: 0.5;
+}
+
 /* ── List item ───────────────────────────── */
 .list-item {
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 12px 16px;
+  padding: 14px 16px;
   cursor: pointer;
   min-height: 64px;
   text-decoration: none;
   color: inherit;
   -webkit-tap-highlight-color: transparent;
+  position: relative;
 }
 
-.list-item:active {
+.list-item:active::before {
+  content: '';
+  position: absolute;
+  inset: 0;
   background: color-mix(in srgb, var(--md-on-surface) 8%, transparent);
+  pointer-events: none;
 }
 
 .item-content {

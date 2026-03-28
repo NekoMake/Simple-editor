@@ -6,97 +6,107 @@
       <!-- 外观 -->
       <div class="section-header">外观</div>
 
-      <div class="list-item">
-        <div class="item-content">
-          <div class="item-title">深色模式</div>
-        </div>
-        <div class="mode-chips">
-          <button
-            v-for="m in MODES"
-            :key="m.value"
-            class="mode-chip"
-            :class="{ active: themeStore.settings.mode === m.value }"
-            @click="themeStore.setMode(m.value as 'light'|'dark'|'system')"
-          >{{ m.label }}</button>
-        </div>
-      </div>
-
-      <!-- 首页背景图 -->
-      <div class="list-item aligned-top">
-        <div class="item-content">
-          <div class="item-title">首页背景图</div>
-          <div class="item-sub" v-if="!settingsStore.homeBackgroundImage">未设置</div>
-          <div class="item-sub" v-else>已设置背景图</div>
-        </div>
-        <div class="bg-actions">
-          <input
-            ref="bgFileInput"
-            type="file"
-            accept="image/*"
-            style="display: none"
-            @change="handleBackgroundImageChange"
-          />
-          <button class="mini-btn" @click="chooseBackgroundImage">
-            <MdIcon name="image" size="sm" />
-            选择
-          </button>
-          <button 
-            v-if="settingsStore.homeBackgroundImage" 
-            class="mini-btn danger"
-            @click="clearBackgroundImage"
-          >
-            <MdIcon name="close" size="sm" />
-            清除
-          </button>
-        </div>
-      </div>
-
-      <!-- 主题色 -->
-      <div class="list-item aligned-top theme-color-item">
-        <div class="item-content">
-          <div class="item-title">主题颜色</div>
-          <div class="item-sub">选择应用的主色调</div>
-        </div>
-        <div class="color-grid">
-          <button
-            v-for="(colors, key) in COLOR_SCHEMES"
-            :key="key"
-            class="color-dot"
-            :style="{ background: key === 'custom' ? themeStore.settings.customPrimaryHex : colors.primary }"
-            :class="{ active: themeStore.settings.colorScheme === key }"
-            @click="handleColorSchemeClick(key as ThemeColorScheme)"
-            :title="COLOR_NAMES[key as ThemeColorScheme]"
-          >
-            <MdIcon v-if="themeStore.settings.colorScheme === key" name="check" size="sm" style="color:#fff" />
-          </button>
+      <div class="list-card">
+        <div class="list-item wrap-on-mobile">
+          <div class="item-content">
+            <div class="item-title">深色模式</div>
+          </div>
+          <div class="mode-chips">
+            <button
+              v-for="m in MODES"
+              :key="m.value"
+              class="mode-chip"
+              :class="{ active: themeStore.settings.mode === m.value }"
+              @click="themeStore.setMode(m.value as 'light'|'dark'|'system')"
+            >{{ m.label }}</button>
+          </div>
         </div>
 
-        <button class="mini-btn custom-color-btn" @click="openCustomColorPicker">
-          <MdIcon name="palette" size="sm" />
-          自定义取色
-        </button>
+        <div class="list-divider"></div>
+
+        <!-- 首页背景图 -->
+        <div class="list-item aligned-top wrap-on-mobile">
+          <div class="item-content">
+            <div class="item-title">首页背景图</div>
+            <div class="item-sub" v-if="!settingsStore.homeBackgroundImage">未设置</div>
+            <div class="item-sub" v-else>已设置背景图</div>
+          </div>
+          <div class="bg-actions">
+            <input
+              ref="bgFileInput"
+              type="file"
+              accept="image/*"
+              style="display: none"
+              @change="handleBackgroundImageChange"
+            />
+            <button class="mini-btn" @click="chooseBackgroundImage">
+              <MdIcon name="image" size="sm" />
+              选择
+            </button>
+            <button 
+              v-if="settingsStore.homeBackgroundImage" 
+              class="mini-btn danger"
+              @click="clearBackgroundImage"
+            >
+              <MdIcon name="close" size="sm" />
+              清除
+            </button>
+          </div>
+        </div>
+
+        <div class="list-divider"></div>
+
+        <!-- 主题色 -->
+        <div class="list-item aligned-top wrap-on-mobile theme-color-item">
+          <div class="item-content">
+            <div class="item-title">主题颜色</div>
+            <div class="item-sub">选择应用的主色调</div>
+          </div>
+          <div class="color-grid">
+            <button
+              v-for="(colors, key) in COLOR_SCHEMES"
+              :key="key"
+              class="color-dot"
+              :style="{ background: key === 'custom' ? themeStore.settings.customPrimaryHex : colors.primary }"
+              :class="{ active: themeStore.settings.colorScheme === key }"
+              @click="handleColorSchemeClick(key as ThemeColorScheme)"
+              :title="COLOR_NAMES[key as ThemeColorScheme]"
+            >
+              <MdIcon v-if="themeStore.settings.colorScheme === key" name="check" size="sm" style="color:#fff" />
+            </button>
+          </div>
+
+          <button class="mini-btn custom-color-btn" @click="openCustomColorPicker">
+            <MdIcon name="palette" size="sm" />
+            自定义取色
+          </button>
+        </div>
       </div>
 
       <div class="section-header">字体</div>
 
-      <div class="list-item" @click="router.push('/font-manager')">
-        <MdIcon name="font_download" style="color:var(--md-on-surface-variant)" />
-        <div class="item-content">
-          <div class="item-title">自定义字体</div>
-          <div class="item-sub">已安装 {{ settingsStore.customFonts.length }} 个字体</div>
+      <div class="list-card">
+        <div class="list-item" @click="router.push('/font-manager')">
+          <MdIcon name="font_download" style="color:var(--md-on-surface-variant)" />
+          <div class="item-content">
+            <div class="item-title">自定义字体</div>
+            <div class="item-sub">已安装 {{ settingsStore.customFonts.length }} 个字体</div>
+          </div>
+          <MdIcon name="chevron_right" style="color:var(--md-on-surface-variant)" />
         </div>
-        <MdIcon name="chevron_right" style="color:var(--md-on-surface-variant)" />
       </div>
 
       <div class="section-header">关于</div>
 
-      <div class="list-item" @click="router.push('/about')">
-        <MdIcon name="info" style="color:var(--md-on-surface-variant)" />
-        <div class="item-content">
-          <div class="item-title">简单编辑</div>
-          <div class="item-sub">版本 1.0.0 · 多格式文本编辑器</div>
+      <div class="list-card">
+        <div class="list-item" @click="router.push('/about')">
+          <MdIcon name="info" style="color:var(--md-on-surface-variant)" />
+          <div class="item-content">
+            <div class="item-title">简单编辑</div>
+            <div class="item-sub">版本 1.0.0 · 多格式文本编辑器</div>
+          </div>
+          <MdIcon name="chevron_right" style="color:var(--md-on-surface-variant)" />
         </div>
-        <MdIcon name="chevron_right" style="color:var(--md-on-surface-variant)" />
       </div>
     </div>
 
@@ -200,7 +210,21 @@ function openCustomColorPicker() {
 .settings-view { display: flex; flex-direction: column; height: 100%; background: var(--md-surface); }
 .settings-body { flex: 1; overflow-y: auto; padding-bottom: 40px; }
 
-.bg-actions { display: flex; gap: 8px; align-items: center; }
+.list-card {
+  margin: 0 16px 8px;
+  background: var(--md-surface-container-low);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.list-divider {
+  height: 1px;
+  background: var(--md-outline-variant);
+  margin: 0 16px;
+  opacity: 0.5;
+}
+
+.bg-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
 .mini-btn {
   height: 32px; padding: 0 12px;
   border-radius: 8px; border: 1px solid var(--md-outline);
@@ -216,21 +240,30 @@ function openCustomColorPicker() {
   color: var(--md-error);
   border-color: var(--md-error);
 }
+
 .section-header {
   font-size: 12px; font-weight: 600; letter-spacing: .5px;
   color: var(--md-primary); text-transform: uppercase;
   padding: 20px 16px 4px;
 }
+
 .list-item {
   display: flex; align-items: center; gap: 16px;
-  padding: 12px 16px; cursor: pointer; min-height: 56px;
+  padding: 14px 16px; cursor: pointer; min-height: 64px;
+  position: relative;
 }
-.list-item.aligned-top { align-items: flex-start; padding-top: 14px; }
-.list-item:active { background: color-mix(in srgb, var(--md-on-surface) 8%, transparent); }
+.list-item.aligned-top { align-items: flex-start; padding-top: 16px; padding-bottom: 16px; }
+.list-item:active::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--md-on-surface) 8%, transparent);
+  pointer-events: none;
+}
 .item-content { flex: 1; min-width: 0; }
 .item-title { font-size: 16px; color: var(--md-on-surface); }
 .item-sub { font-size: 14px; color: var(--md-on-surface-variant); margin-top: 2px; }
-.mode-chips { display: flex; gap: 6px; }
+.mode-chips { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
 .mode-chip {
   height: 32px; padding: 0 12px;
   border-radius: 8px; border: 1px solid var(--md-outline);
@@ -279,20 +312,26 @@ function openCustomColorPicker() {
   color: var(--md-on-surface-variant);
 }
 
-@media (max-width: 420px) {
-  .theme-color-item {
+@media (max-width: 600px) {
+  .wrap-on-mobile {
     flex-wrap: wrap;
     align-items: flex-start;
   }
 
-  .theme-color-item .item-content {
+  .wrap-on-mobile .item-content {
     flex: 1 1 100%;
   }
 
-  .theme-color-item .color-grid {
+  .wrap-on-mobile .mode-chips,
+  .wrap-on-mobile .bg-actions,
+  .wrap-on-mobile .color-grid {
     width: 100%;
-    justify-content: flex-start;
+    justify-content: flex-end;
     padding-top: 8px;
+  }
+
+  .custom-color-btn {
+    margin-left: auto;
   }
 }
 </style>
