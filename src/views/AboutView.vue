@@ -7,7 +7,7 @@
       <!-- App 信息卡片 -->
       <div class="app-card">
         <div class="app-icon-wrap">
-          <img src="/icon.svg" alt="应用图标" class="app-icon" />
+          <img src="/icon-only-monochrome.svg" alt="应用图标" class="app-icon" />
         </div>
         <div class="app-name">简单编辑</div>
         <div class="app-version">版本 {{ VERSION }}</div>
@@ -80,25 +80,38 @@ function openGitHub() {
 }
 
 const LICENSES = [
-  { name: 'Vue',             license: 'MIT',              author: 'Evan You & Vue contributors' },
-  { name: 'Vue Router',      license: 'MIT',              author: 'Evan You & Vue Router contributors' },
-  { name: 'Pinia',           license: 'MIT',              author: 'Eduardo San Martin Morote' },
-  { name: 'pinia-plugin-persistedstate', license: 'MIT', author: 'Sacha Arbonel' },
-  { name: 'Vite',            license: 'MIT',              author: 'Evan You & Vite contributors' },
-  { name: 'CodeMirror',      license: 'MIT',              author: 'Marijn Haverbeke & contributors' },
-  { name: '@codemirror/lang-json',     license: 'MIT',   author: 'CodeMirror contributors' },
-  { name: '@codemirror/lang-markdown', license: 'MIT',   author: 'CodeMirror contributors' },
-  { name: '@codemirror/legacy-modes',  license: 'MIT',   author: 'CodeMirror contributors' },
-  { name: '@codemirror/autocomplete',  license: 'MIT',   author: 'CodeMirror contributors' },
-  { name: '@codemirror/lint',          license: 'MIT',   author: 'CodeMirror contributors' },
-  { name: 'marked',          license: 'MIT',              author: 'Christopher Jeffrey & contributors' },
-  { name: 'marked-highlight', license: 'MIT',             author: 'Marvin Hagemeister' },
-  { name: 'highlight.js',    license: 'BSD-3-Clause',     author: 'Ivan Sagalaev & contributors' },
-  { name: 'DOMPurify',       license: 'Apache-2.0 / MPL-2.0', author: 'Mario Heiderich & cure53' },
-  { name: 'js-yaml',         license: 'MIT',              author: 'Vitaly Puzrin & contributors' },
-  { name: 'smol-toml',       license: 'MIT',              author: 'Cynthia K. Rey' },
-  { name: 'Capacitor',       license: 'MIT',              author: 'Ionic & Capacitor contributors' },
-  { name: 'Material Symbols', license: 'Apache-2.0',      author: 'Google LLC' },
+  { name: '@capacitor/android',        license: 'MIT',              author: 'Ionic & contributors' },
+  { name: '@capacitor/app',            license: 'MIT',              author: 'Ionic & contributors' },
+  { name: '@capacitor/core',           license: 'MIT',              author: 'Ionic & contributors' },
+  { name: '@capacitor/filesystem',     license: 'MIT',              author: 'Ionic & contributors' },
+  { name: '@capacitor/haptics',        license: 'MIT',              author: 'Ionic & contributors' },
+  { name: '@capacitor/share',          license: 'MIT',              author: 'Ionic & contributors' },
+  { name: '@codemirror/autocomplete',  license: 'MIT',              author: 'CodeMirror contributors' },
+  { name: '@codemirror/commands',      license: 'MIT',              author: 'CodeMirror contributors' },
+  { name: '@codemirror/lang-json',     license: 'MIT',              author: 'CodeMirror contributors' },
+  { name: '@codemirror/lang-markdown', license: 'MIT',              author: 'CodeMirror contributors' },
+  { name: '@codemirror/language',      license: 'MIT',              author: 'CodeMirror contributors' },
+  { name: '@codemirror/language-data', license: 'MIT',              author: 'CodeMirror contributors' },
+  { name: '@codemirror/legacy-modes',  license: 'MIT',              author: 'CodeMirror contributors' },
+  { name: '@codemirror/lint',          license: 'MIT',              author: 'CodeMirror contributors' },
+  { name: '@codemirror/state',         license: 'MIT',              author: 'CodeMirror contributors' },
+  { name: '@codemirror/view',          license: 'MIT',              author: 'CodeMirror contributors' },
+  { name: '@vue/language-core',        license: 'MIT',              author: 'Vue contributors' },
+  { name: 'CodeMirror',                license: 'MIT',              author: 'Marijn Haverbeke & contributors' },
+  { name: 'DOMPurify',                 license: 'Apache-2.0 / MPL-2.0', author: 'Mario Heiderich & cure53' },
+  { name: 'highlight.js',              license: 'BSD-3-Clause',     author: 'Ivan Sagalaev & contributors' },
+  { name: 'js-yaml',                   license: 'MIT',              author: 'Vitaly Puzrin & contributors' },
+  { name: 'marked',                    license: 'MIT',              author: 'Christopher Jeffrey & contributors' },
+  { name: 'marked-highlight',          license: 'MIT',              author: 'Marvin Hagemeister & contributors' },
+  { name: 'Material Symbols',          license: 'Apache-2.0',       author: 'Google LLC' },
+  { name: 'Pinia',                     license: 'MIT',              author: 'Eduardo San Martin Morote & contributors' },
+  { name: 'pinia-plugin-persistedstate', license: 'MIT',            author: 'Sacha Arbonel & contributors' },
+  { name: 'smol-toml',                 license: 'MIT',              author: 'Cynthia K. Rey' },
+  { name: 'TypeScript',                license: 'Apache-2.0',       author: 'Microsoft & contributors' },
+  { name: 'Vite',                      license: 'MIT',              author: 'Evan You & Vite contributors' },
+  { name: 'Vue',                       license: 'MIT',              author: 'Evan You & Vue contributors' },
+  { name: 'Vue Router',                license: 'MIT',              author: 'Evan You & Vue Router contributors' },
+  { name: 'vue-tsc',                   license: 'MIT',              author: 'Johnson Chu & contributors' },
 ]
 </script>
 
@@ -119,7 +132,7 @@ const LICENSES = [
 /* ── App 信息卡片 ─────────────────────────── */
 .app-card {
   margin: 20px 16px 8px;
-  background: var(--md-surface-container-low);
+  background: var(--md-surface-low);
   border-radius: 20px;
   padding: 28px 24px 24px;
   display: flex;
@@ -144,6 +157,7 @@ const LICENSES = [
   width: 52px;
   height: 52px;
   object-fit: contain;
+  filter: brightness(0) invert(1);
 }
 
 .app-name {
