@@ -1,5 +1,5 @@
 <template>
-  <div class="file-card" :class="{ selected }" @click="emit('click')" @long-press="emit('longPress')">
+  <div class="file-card" :class="[{ selected }, viewMode]" @click="emit('click')" @long-press="emit('longPress')">
     <div class="card-icon" :style="{ background: iconBg, color: iconColor }">
       <MdIcon :name="iconName" size="lg" />
     </div>
@@ -23,6 +23,7 @@ import { MODULE_REGISTRY } from '@/editors/registry'
 const props = defineProps<{
   file: AppFile
   selected?: boolean
+  viewMode?: 'list' | 'grid'
 }>()
 
 const emit = defineEmits<{
@@ -52,6 +53,41 @@ const meta = computed(() =>
 .file-card.selected {
   background: color-mix(in srgb, var(--md-on-surface) 8%, transparent);
 }
+
+/* Grid视图样式 */
+.file-card.grid {
+  flex-direction: column;
+  padding: 16px 12px;
+  text-align: center;
+  gap: 8px;
+  position: relative;
+}
+.file-card.grid .card-icon {
+  width: 56px;
+  height: 56px;
+}
+.file-card.grid .card-content {
+  width: 100%;
+}
+.file-card.grid .card-name {
+  font-size: 14px;
+  white-space: normal;
+  word-break: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.file-card.grid .card-meta {
+  display: none;
+}
+.file-card.grid .card-actions {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
 .card-icon {
   width: 48px; height: 48px; border-radius: 12px;
   display: flex; align-items: center; justify-content: center;

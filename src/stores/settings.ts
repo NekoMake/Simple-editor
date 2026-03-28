@@ -26,6 +26,7 @@ export const useSettingsStore = defineStore('settings', () => {
   const editor = ref<EditorSettings>({ ...DEFAULT_EDITOR })
   const customFonts = ref<CustomFont[]>([])
   const homeBackgroundImage = ref<string>('')  // 首页背景图
+  const homeViewMode = ref<'list' | 'grid'>('list')  // 首页视图模式
 
   function updateReading(patch: Partial<ReadingSettings>) {
     Object.assign(reading.value, patch)
@@ -53,17 +54,23 @@ export const useSettingsStore = defineStore('settings', () => {
     homeBackgroundImage.value = imageUrl
   }
 
+  function setHomeViewMode(mode: 'list' | 'grid') {
+    homeViewMode.value = mode
+  }
+
   return {
     reading,
     editor,
     customFonts,
     homeBackgroundImage,
+    homeViewMode,
     updateReading,
     resetReading,
     updateEditor,
     addFont,
     removeFont,
     setHomeBackgroundImage,
+    setHomeViewMode,
   }
 }, {
   persist: {

@@ -31,11 +31,20 @@
 
     <!-- 格式筛选 Chips（粘性） -->
     <div class="filter-bar">
-      <ChipGroup :options="FORMAT_OPTIONS" v-model="fileStore.filter.format" aria-label="文件格式筛选" />
+      <div class="filter-bar-content">
+        <ChipGroup :options="FORMAT_OPTIONS" v-model="fileStore.filter.format" aria-label="文件格式筛选" />
+        <div class="view-mode-toggle">
+          <IconButton 
+            :icon="settingsStore.homeViewMode === 'list' ? 'view_list' : 'grid_view'"
+            aria-label="切换视图"
+            @click="toggleViewMode"
+          />
+        </div>
+      </div>
     </div>
 
     <!-- 文件列表 -->
-    <div class="file-list" @scroll.passive="onScroll">
+    <div class="file-list" :class="settingsStore.homeViewMode" @scroll.passive="onScroll">
       <div v-if="fileStore.isLoading" class="empty-state">
         <div class="loading-dots"><span></span><span></span><span></span></div>
       </div>
@@ -45,6 +54,7 @@
           v-for="file in fileStore.filteredFiles"
           :key="file.id"
           :file="file"
+          :view-mode="settingsStore.homeViewMode"
           @click="openFile(file.id)"
           @long-press="showFileMenu(file.id)"
         >
@@ -218,6 +228,12 @@ async function closeSearch() {
   fileStore.filter.query = ''
 }
 
+// ---- 视图切换 ----
+function toggleViewMode() {
+  const newMode = settingsStore.homeViewMode === 'list' ? 'grid' : 'list'
+  settingsStore.setHomeViewMode(newMode)
+}
+
 // ---- 新建 ----
 const showCreateSheet = ref(false)
 const showNameDialog = ref(false)
@@ -345,17 +361,35 @@ async function doDelete() {
 .filter-bar {
   flex-shrink: 0;
   padding: 10px 16px;
-  overflow-x: auto;
   background: var(--md-surface);
   border-bottom: 1px solid var(--md-outline-variant);
   position: sticky;
   top: 0;
   z-index: 10;
 }
-.filter-bar::-webkit-scrollbar { display: none; }
+.filter-bar-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  overflow-x: auto;
+}
+.filter-bar-content::-webkit-scrollbar { display: none; }
+.view-mode-toggle {
+  flex-shrink: 0;
+  margin-left: auto;
+}
 
 /* ---- 文件列表（可滚动区域） ---- */
 .file-list { flex: 1; overflow-y: auto; padding: 0 8px; }
+
+/* Grid视图布局 */
+.file-list.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 8px;
+  padding: 8px;
+  align-content: start;
+}
 
 .home-footer-intro {
   flex-shrink: 0;
