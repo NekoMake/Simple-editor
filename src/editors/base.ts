@@ -1,7 +1,7 @@
 import { EditorState, type Extension, StateField, StateEffect } from '@codemirror/state'
 import { EditorView, keymap, lineNumbers, highlightActiveLine, Decoration, type DecorationSet, WidgetType } from '@codemirror/view'
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands'
-import { closeBrackets, closeBracketsKeymap, completionKeymap, autocompletion } from '@codemirror/autocomplete'
+import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete'
 import { lintKeymap, diagnosticCount, forEachDiagnostic } from '@codemirror/lint'
 import { indentOnInput, syntaxHighlighting, HighlightStyle, bracketMatching } from '@codemirror/language'
 import { tags as t } from '@lezer/highlight'
@@ -176,18 +176,10 @@ export function buildBaseExtensions(options: {
     highlightActiveLine(),
     // 行尾诊断信息显示
     inlineDiagnostics(),
-    // 移动端友好的自动补全配置
-    autocompletion({
-      maxRenderedOptions: 8,
-      activateOnTyping: true,
-      closeOnBlur: true,
-      icons: false,  // 移动端不显示图标以节省空间
-    }),
     keymap.of([
       ...defaultKeymap,
       ...historyKeymap,
       ...closeBracketsKeymap,
-      ...completionKeymap,
       ...lintKeymap,
     ]),
     EditorView.updateListener.of(update => {
@@ -257,37 +249,6 @@ export function buildBaseExtensions(options: {
         overflow: 'hidden',
         fontFamily: 'var(--app-font-sans)',
       },
-      '.cm-tooltip-autocomplete': {
-        minWidth: '240px',
-        maxHeight: '280px',
-        fontFamily: 'var(--app-font-sans)',
-        '& > ul': {
-          maxHeight: '280px',
-          fontFamily: 'inherit',
-        },
-        '& > ul > li': { 
-          padding: '10px 16px',
-          lineHeight: '1.5',
-          cursor: 'pointer',
-          transition: 'background-color 0.2s',
-        },
-        '& > ul > li[aria-selected]': {
-          background: 'var(--md-secondary-container)',
-          color: 'var(--md-on-secondary-container)',
-        },
-      },
-      '.cm-completionIcon': {
-        width: '1.2em',
-        marginRight: '0.5em',
-      },
-      '.cm-completionLabel': {
-        fontFamily: 'inherit',
-      },
-      '.cm-completionDetail': {
-        fontStyle: 'normal',
-        opacity: 0.7,
-        marginLeft: '0.5em',
-      },
       '.cm-foldGutter': {
         minWidth: '20px',
       },
@@ -305,14 +266,6 @@ export function buildBaseExtensions(options: {
       },
       '.cm-searchMatch-selected': {
         background: 'color-mix(in srgb, var(--md-tertiary) 35%, transparent)',
-      },
-    }),
-    // 自动补全显示在下方（移动端友好）
-    EditorView.theme({
-      '.cm-tooltip.cm-tooltip-autocomplete': {
-        '& > ul': {
-          maxHeight: 'min(280px, 40vh)',
-        },
       },
     }),
     EditorView.contentAttributes.of({

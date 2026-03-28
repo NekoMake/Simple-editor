@@ -33,11 +33,20 @@
 
     <template v-else-if="file">
       <!-- 编辑模式 -->
-      <div v-show="mode === 'edit'" class="editor-container">
-        <CodeMirrorEditor
-          v-model="content"
-          :format="file.format"
-          @change="onChange"
+      <div v-show="mode === 'edit'" class="editor-wrapper">
+        <div class="editor-container">
+          <CodeMirrorEditor
+            ref="editorRef"
+            v-model="content"
+            :format="file.format"
+            @change="onChange"
+          />
+        </div>
+        <!-- 工具栏（底部或侧边） -->
+        <EditorToolbar
+          v-if="toolbarActions.length > 0"
+          :actions="toolbarActions"
+          @action="handleToolbarAction"
         />
       </div>
 
@@ -102,6 +111,7 @@ import MdIcon from '@/components/ui/MdIcon.vue'
 import MdButton from '@/components/ui/MdButton.vue'
 import BottomSheet from '@/components/ui/BottomSheet.vue'
 import SnackbarHost from '@/components/ui/SnackbarHost.vue'
+import EditorToolbar from '@/components/ui/EditorToolbar.vue'
 import CodeMirrorEditor from '@/editors/CodeMirrorEditor.vue'
 import NovelReader from '@/components/previews/NovelReader.vue'
 import MarkdownPreview from '@/components/previews/MarkdownPreview.vue'
@@ -112,6 +122,8 @@ import { useUiStore } from '@/stores/ui'
 import { useFileEditor } from '@/composables/useFileEditor'
 import { getModuleById } from '@/editors/registry'
 import { useSwipeBack } from '@/composables/useUI'
+import { getToolbarActions } from '@/editors/toolbars'
+import type { ToolbarAction } from '@/types/toolbar'
 
 const props = defineProps<{ fileId: string }>()
 const router = useRouter()
@@ -121,11 +133,13 @@ const uiStore = useUiStore()
 const file = computed(() => fileStore.getFileById(props.fileId))
 const mod = computed(() => file.value ? getModuleById(file.value.format) : null)
 const hasSpecialPreview = computed(() => mod.value?.hasSpecialPreview ?? false)
+const toolbarActions = computed(() => file.value ? getToolbarActions(file.value.format) : [])
 
 const mode = ref<'edit' | 'preview'>('edit')
 const showMenu = ref(false)
 const showReadingSettings = ref(false)
 const showEditorSettings = ref(false)
+const editorRef = ref<InstanceType<typeof CodeMirrorEditor> | null>(null)
 
 const { content, isDirty, isLoading, load, save, onChange } = file.value
   ? useFileEditor(file.value)
@@ -151,6 +165,26 @@ async function doExport() {
   }
 }
 
+/**
+ * 处理工具栏操作
+ */
+function handleToolbarAction(action: ToolbarAction) {
+  if (!editorRef.value) return
+  
+  // 如果有自定义处理器，优先执行
+  if (action.handler) {
+    action.handler()
+    return
+  }
+  
+  // 处理文本插入
+  if (action.insertText) {
+    editorRef.value.insertText(action.insertText)
+  } else if (action.wrapText) {
+    editorRef.value.insertText('', action.wrapText)
+  }
+}
+
 useSwipeBack(goBack)
 
 onMounted(() => {
@@ -164,10 +198,27 @@ onMounted(() => {
   background: var(--md-surface);
   overflow: hidden;
 }
+
+.editor-wrapper {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* 平板及以上设备：工具栏放到侧边 */
+@media (min-width: 768px) {
+  .editor-wrapper {
+    flex-direction: row;
+  }
+}
+
 .editor-container, .preview-container {
   flex: 1; overflow: hidden;
   display: flex; flex-direction: column;
 }
+
 .loading-overlay {
   flex: 1; display: flex; align-items: center; justify-content: center;
 }

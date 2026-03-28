@@ -2,7 +2,7 @@
 // 核心类型定义
 // ============================================================
 
-export type FileFormat = 'txt' | 'md' | 'json' | 'toml' | 'yaml'
+export type FileFormat = 'txt' | 'md' | 'json' | 'toml' | 'yaml' | 'yml'
 
 export interface AppFile {
   id: string

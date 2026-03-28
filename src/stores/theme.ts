@@ -78,6 +78,7 @@ export const useThemeStore = defineStore('theme', () => {
   // 生成需要注入到 :root 的 CSS 变量（覆盖颜色部分）
   const cssVariables = computed<Record<string, string>>(() => {
     const scheme = settings.value.colorScheme
+    const dark = isDark.value
     let colors = COLOR_SCHEMES[scheme]
 
     if (scheme === 'custom') {
@@ -95,6 +96,20 @@ export const useThemeStore = defineStore('theme', () => {
       '--md-on-primary': colors.onPrimary,
       '--md-primary-container': colors.primaryContainer,
       '--md-on-primary-container': colors.onPrimaryContainer,
+      // 让按钮和背景容器跟随主色调进行轻量染色
+      '--md-secondary-container': dark
+        ? 'color-mix(in srgb, var(--md-primary) 34%, var(--md-surface))'
+        : 'color-mix(in srgb, var(--md-primary) 18%, var(--md-surface))',
+      '--md-on-secondary-container': 'var(--md-on-surface)',
+      '--md-surface-container': dark
+        ? 'color-mix(in srgb, var(--md-primary) 12%, var(--md-surface))'
+        : 'color-mix(in srgb, var(--md-primary) 6%, var(--md-surface))',
+      '--md-surface-container-high': dark
+        ? 'color-mix(in srgb, var(--md-primary) 16%, var(--md-surface))'
+        : 'color-mix(in srgb, var(--md-primary) 9%, var(--md-surface))',
+      '--md-surface-container-highest': dark
+        ? 'color-mix(in srgb, var(--md-primary) 22%, var(--md-surface))'
+        : 'color-mix(in srgb, var(--md-primary) 13%, var(--md-surface))',
     }
   })
 

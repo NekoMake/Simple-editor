@@ -68,6 +68,48 @@ function rebuildEditor() {
   initEditor()
 }
 
+/**
+ * 插入文本到当前光标位置
+ * @param text 要插入的文本（字符串或函数）
+ * @param wrapText 包裹文本的前后缀
+ */
+function insertText(text: string | ((selection: string) => string), wrapText?: { before: string; after: string }) {
+  if (!view) return
+  
+  const selection = view.state.selection.main
+  const selectedText = view.state.doc.sliceString(selection.from, selection.to)
+  
+  let insertedText: string
+  let cursorOffset = 0
+  
+  if (wrapText) {
+    // 包裹选中的文本
+    insertedText = `${wrapText.before}${selectedText}${wrapText.after}`
+    // 如果没有选中文本，光标移到中间
+    cursorOffset = selectedText ? insertedText.length : wrapText.before.length
+  } else {
+    // 生成要插入的文本
+    if (typeof text === 'function') {
+      insertedText = text(selectedText)
+    } else {
+      insertedText = text
+    }
+    cursorOffset = insertedText.length
+  }
+  
+  view.dispatch({
+    changes: { from: selection.from, to: selection.to, insert: insertedText },
+    selection: { anchor: selection.from + cursorOffset }
+  })
+  
+  view.focus()
+}
+
+// 暴露方法给父组件
+defineExpose({
+  insertText,
+})
+
 // 外部修改内容时同步（不破坏光标）
 watch(() => props.modelValue, (newVal) => {
   if (!view) return
