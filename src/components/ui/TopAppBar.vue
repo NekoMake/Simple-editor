@@ -41,6 +41,7 @@ const emit = defineEmits<{ back: [] }>()
   flex: 1; padding: 0 8px;
   font-size: 22px; font-weight: 500; line-height: 1.3;
   color: var(--md-on-surface);
+  font-family: inherit;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .bar-actions { display: flex; gap: 0; flex-shrink: 0; }

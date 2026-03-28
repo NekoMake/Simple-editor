@@ -31,11 +31,12 @@
       </button>
     </div>
 
-    <div class="setting-row" v-if="monoFonts.length > 0">
-      <span class="setting-name">代码字体</span>
+    <div class="setting-row">
+      <span class="setting-name">字体</span>
       <select class="font-select" v-model="es.fontFamily">
-        <option value="var(--app-font-mono)">系统等宽字体</option>
-        <option v-for="f in monoFonts" :key="f.name" :value="f.name">{{ f.name }}</option>
+        <option value="var(--app-font-sans)">系统字体</option>
+        <option value="var(--app-font-mono)">等宽字体</option>
+        <option v-for="f in customFonts" :key="f.name" :value="f.name">{{ f.name }}</option>
       </select>
     </div>
   </div>
@@ -48,7 +49,7 @@ import { useSettingsStore } from '@/stores/settings'
 
 const settingsStore = useSettingsStore()
 const es = computed(() => settingsStore.editor)
-const monoFonts = computed(() => settingsStore.customFonts.filter(f => f.isMonospace))
+const customFonts = computed(() => settingsStore.customFonts)
 
 function adj(key: 'fontSize', delta: number) {
   settingsStore.updateEditor({ [key]: Math.min(28, Math.max(10, es.value[key] + delta)) })

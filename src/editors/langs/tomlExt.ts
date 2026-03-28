@@ -6,6 +6,34 @@ import { linter, type Diagnostic } from '@codemirror/lint'
 import { parse as parseTOML } from 'smol-toml'
 import type { Extension } from '@codemirror/state'
 
+/**
+ * 翻译 TOML 错误信息为中文
+ * 基于真实 smol-toml 错误消息的精确匹配
+ */
+function translateTomlError(message: string): string {
+  const patterns: Array<[RegExp, string]> = [
+    // 真实的 smol-toml 错误消息（带详细位置提示）
+    [/^Invalid TOML document: incomplete key-value declaration: no value specified[\s\S]*/i, '缺少值'],
+    [/^Invalid TOML document: only letter, numbers, dashes and underscores are allowed in keys[\s\S]*/i, '键名格式错误'],
+    [/^Invalid TOML document: invalid value[\s\S]*/i, '值格式错误'],
+    [/^Invalid TOML document: incomplete key-value: cannot find end of key[\s\S]*/i, '键未闭合'],
+    [/^Invalid TOML document: duplicate key[\s\S]*/i, '键名重复'],
+    [/^Invalid TOML document: [\s\S]*/i, 'TOML 格式错误'],
+    
+    // 通用兜底
+    [/invalid/i, '格式错误'],
+    [/incomplete/i, '不完整'],
+  ]
+
+  for (const [pattern, replacement] of patterns) {
+    if (pattern.test(message)) {
+      return message.replace(pattern, replacement)
+    }
+  }
+  
+  return message
+}
+
 function tomlLinter() {
   return (view: import('@codemirror/view').EditorView): Diagnostic[] => {
     const text = view.state.doc.toString()
@@ -15,6 +43,7 @@ function tomlLinter() {
       return []
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e)
+      const translatedMsg = translateTomlError(msg)
       // 尝试解析行号
       const lineMatch = msg.match(/line (\d+)/i)
       const line = lineMatch ? parseInt(lineMatch[1]) - 1 : 0
@@ -23,7 +52,7 @@ function tomlLinter() {
         from: lineInfo.from,
         to: lineInfo.to,
         severity: 'error',
-        message: msg,
+        message: translatedMsg,
       }]
     }
   }

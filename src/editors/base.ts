@@ -1,9 +1,158 @@
-import { EditorState, type Extension } from '@codemirror/state'
-import { EditorView, keymap, lineNumbers, highlightActiveLine } from '@codemirror/view'
+import { EditorState, type Extension, StateField, StateEffect } from '@codemirror/state'
+import { EditorView, keymap, lineNumbers, highlightActiveLine, Decoration, type DecorationSet, WidgetType } from '@codemirror/view'
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands'
-import { closeBrackets, closeBracketsKeymap, completionKeymap } from '@codemirror/autocomplete'
-import { lintKeymap } from '@codemirror/lint'
-import { indentOnInput, syntaxHighlighting, defaultHighlightStyle, bracketMatching } from '@codemirror/language'
+import { closeBrackets, closeBracketsKeymap, completionKeymap, autocompletion } from '@codemirror/autocomplete'
+import { lintKeymap, diagnosticCount, forEachDiagnostic } from '@codemirror/lint'
+import { indentOnInput, syntaxHighlighting, HighlightStyle, bracketMatching } from '@codemirror/language'
+import { tags as t } from '@lezer/highlight'
+
+const dynamicThemeHighlightStyle = HighlightStyle.define([
+  { tag: t.keyword, color: 'var(--md-primary)', fontWeight: 'bold' },
+  { tag: [t.name, t.deleted, t.character, t.propertyName, t.macroName], color: 'var(--md-tertiary)' },
+  { tag: [t.variableName], color: 'var(--md-on-surface)' },
+  { tag: [t.string, t.inserted, t.special(t.string)], color: 'var(--md-secondary)' },
+  { tag: [t.number, t.bool, t.null], color: 'var(--md-error)' },
+  { tag: [t.comment, t.meta], color: 'var(--md-outline)', fontStyle: 'italic' },
+  { tag: t.strong, fontWeight: 'bold' },
+  { tag: t.emphasis, fontStyle: 'italic' },
+  { tag: t.link, color: 'var(--md-primary)', textDecoration: 'underline' },
+  { tag: t.heading, fontWeight: 'bold', color: 'var(--md-primary)' },
+  { tag: t.punctuation, color: 'var(--md-on-surface-variant)' },
+])
+
+/**
+ * 行尾诊断信息显示扩展（类似 Error Lens）
+ * 将 lint 错误信息直接显示在代码行的末尾
+ */
+function inlineDiagnostics(): Extension {
+  // 创建诊断信息小部件
+  class DiagnosticWidget extends WidgetType {
+    constructor(readonly message: string, readonly severity: string) {
+      super()
+    }
+
+    toDOM() {
+      const span = document.createElement('span')
+      span.className = `cm-inline-diagnostic cm-inline-diagnostic-${this.severity}`
+      
+      // 移动端使用更短的消息（30字符），桌面端稍长（50字符）
+      const isMobile = window.innerWidth < 768
+      const maxLength = isMobile ? 30 : 50
+      const shortMessage = this.message.length > maxLength 
+        ? this.message.substring(0, maxLength - 3) + '...' 
+        : this.message
+      
+      // 移动端只显示图标+简短消息，去掉多余信息
+      const displayMessage = isMobile 
+        ? `⚠ ${shortMessage.split('(')[0].trim()}` // 移除括号内的详细位置信息
+        : `⚠ ${shortMessage}`
+      
+      span.textContent = ` ${displayMessage}`
+      span.title = this.message // 完整消息作为 tooltip
+      return span
+    }
+
+    eq(other: DiagnosticWidget): boolean {
+      return other.message === this.message && other.severity === this.severity
+    }
+
+    ignoreEvent(): boolean {
+      return true
+    }
+  }
+
+  const inlineDiagnosticField = StateField.define<DecorationSet>({
+    create(state) {
+      return buildDiagnosticDecorations(state)
+    },
+    
+    update(decorations, tr) {
+      // 强制每次都重新构建，确保 lint 状态变化时能刷新
+      // tr.state 包含了最新的 lint 状态
+      return buildDiagnosticDecorations(tr.state)
+    },
+    
+    provide: f => EditorView.decorations.from(f),
+  })
+
+  // 构建诊断装饰器
+  function buildDiagnosticDecorations(state: EditorState): DecorationSet {
+    const diagnostics: Array<{ from: number; to: number; message: string; severity: string }> = []
+    
+    // 收集所有诊断信息
+    forEachDiagnostic(state, (diagnostic, from, to) => {
+      diagnostics.push({
+        from,
+        to,
+        message: diagnostic.message,
+        severity: diagnostic.severity,
+      })
+    })
+    
+    // 按行分组诊断信息（每行只显示第一个错误）
+    const lineMap = new Map<number, { message: string; severity: string }>()
+    diagnostics.forEach(({ from, message, severity }) => {
+      const line = state.doc.lineAt(from).number
+      if (!lineMap.has(line)) {
+        // 只保留每行的第一个错误
+        lineMap.set(line, { message, severity })
+      }
+    })
+
+    // 创建装饰器
+    const decorationArray: Array<any> = []
+    lineMap.forEach((diag, lineNumber) => {
+      const line = state.doc.line(lineNumber)
+      const lineEnd = line.to
+      
+      // 在行尾添加 widget
+      const widget = Decoration.widget({
+        widget: new DiagnosticWidget(diag.message, diag.severity),
+        side: 1,
+      })
+      
+      decorationArray.push(widget.range(lineEnd))
+    })
+
+    return Decoration.set(decorationArray, true)
+  }
+
+  return [
+    inlineDiagnosticField,
+    EditorView.theme({
+      '.cm-inline-diagnostic': {
+        display: 'inline',
+        whiteSpace: 'nowrap',
+        marginLeft: '0.5em',
+        fontSize: '0.75em',
+        opacity: '0.7',
+        fontStyle: 'italic',
+        pointerEvents: 'none',
+        userSelect: 'none',
+        maxWidth: '40vw',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+      },
+      '.cm-inline-diagnostic-error': {
+        color: 'var(--md-error)',
+      },
+      '.cm-inline-diagnostic-warning': {
+        color: '#ff9800',
+      },
+      '.cm-inline-diagnostic-info': {
+        color: 'var(--md-primary)',
+      },
+      // 移动端特殊样式
+      '@media (max-width: 768px)': {
+        '.cm-inline-diagnostic': {
+          fontSize: '0.7em',
+          marginLeft: '0.3em',
+          maxWidth: '30vw',
+        },
+      },
+    }),
+  ]
+}
 
 /**
  * 构建 CodeMirror 基础扩展集合
@@ -20,11 +169,20 @@ export function buildBaseExtensions(options: {
 }): Extension[] {
   const exts: Extension[] = [
     history(),
-    syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+    syntaxHighlighting(dynamicThemeHighlightStyle, { fallback: true }),
     bracketMatching(),
     closeBrackets(),
     indentOnInput(),
     highlightActiveLine(),
+    // 行尾诊断信息显示
+    inlineDiagnostics(),
+    // 移动端友好的自动补全配置
+    autocompletion({
+      maxRenderedOptions: 8,
+      activateOnTyping: true,
+      closeOnBlur: true,
+      icons: false,  // 移动端不显示图标以节省空间
+    }),
     keymap.of([
       ...defaultKeymap,
       ...historyKeymap,
@@ -40,51 +198,127 @@ export function buildBaseExtensions(options: {
     EditorView.theme({
       '&': {
         fontSize: `${options.fontSize}px`,
-        fontFamily: options.fontFamily,
+        fontFamily: 'var(--app-font-sans)',
         height: '100%',
         flex: 1,
+        background: 'var(--md-surface)',
+        color: 'var(--md-on-surface)',
       },
       '.cm-content': {
-        padding: '16px',
+        fontFamily: options.fontFamily,
+        padding: '20px 16px',
         caretColor: 'var(--md-primary)',
         tabSize: String(options.tabSize),
+        lineHeight: '1.65',
+        minHeight: '100%',
       },
       '.cm-focused': { outline: 'none' },
-      '.cm-line': { padding: '0 4px' },
-      '&.cm-focused .cm-cursor': { borderLeftColor: 'var(--md-primary)' },
+      '.cm-line': { 
+        padding: '0 6px',
+        lineHeight: '1.65',
+      },
+      '&.cm-focused .cm-cursor': { 
+        borderLeftColor: 'var(--md-primary)',
+        borderLeftWidth: '2px',
+      },
       '.cm-selectionBackground': {
-        background: 'color-mix(in srgb, var(--md-primary) 22%, transparent)',
+        background: 'color-mix(in srgb, var(--md-primary) 16%, transparent)',
       },
       '&.cm-focused .cm-selectionBackground': {
-        background: 'color-mix(in srgb, var(--md-primary) 28%, transparent)',
+        background: 'color-mix(in srgb, var(--md-primary) 24%, transparent)',
       },
       '.cm-gutters': {
-        background: 'var(--md-surface-container-low)',
+        background: 'var(--md-surface-container)',
         color: 'var(--md-on-surface-variant)',
         border: 'none',
         borderRight: '1px solid var(--md-outline-variant)',
-        minWidth: '40px',
+        minWidth: '48px',
+        fontSize: '14px',
+        paddingRight: '8px',
+      },
+      '.cm-gutterElement': {
+        paddingLeft: '8px',
       },
       '.cm-activeLineGutter': {
-        background: 'color-mix(in srgb, var(--md-primary) 12%, transparent)',
+        background: 'var(--md-surface-container-high)',
+        color: 'var(--md-primary)',
+        fontWeight: '600',
       },
       '.cm-activeLine': {
-        background: 'color-mix(in srgb, var(--md-primary) 6%, transparent)',
+        background: 'color-mix(in srgb, var(--md-primary) 8%, transparent)',
       },
       '.cm-tooltip': {
-        background: 'var(--md-surface-container-high)',
-        border: '1px solid var(--md-outline-variant)',
-        borderRadius: '8px',
+        background: 'var(--md-surface-container-highest)',
+        border: '1px solid var(--md-outline)',
+        borderRadius: 'var(--md-shape-md)',
         color: 'var(--md-on-surface)',
-        boxShadow: '0 4px 8px 3px rgba(0,0,0,.15)',
+        boxShadow: 'var(--md-elevation-2)',
+        fontSize: `${Math.max(options.fontSize - 2, 14)}px`,
+        overflow: 'hidden',
+        fontFamily: 'var(--app-font-sans)',
       },
       '.cm-tooltip-autocomplete': {
-        '& > ul > li': { padding: '6px 12px' },
+        minWidth: '240px',
+        maxHeight: '280px',
+        fontFamily: 'var(--app-font-sans)',
+        '& > ul': {
+          maxHeight: '280px',
+          fontFamily: 'inherit',
+        },
+        '& > ul > li': { 
+          padding: '10px 16px',
+          lineHeight: '1.5',
+          cursor: 'pointer',
+          transition: 'background-color 0.2s',
+        },
         '& > ul > li[aria-selected]': {
           background: 'var(--md-secondary-container)',
           color: 'var(--md-on-secondary-container)',
         },
       },
+      '.cm-completionIcon': {
+        width: '1.2em',
+        marginRight: '0.5em',
+      },
+      '.cm-completionLabel': {
+        fontFamily: 'inherit',
+      },
+      '.cm-completionDetail': {
+        fontStyle: 'normal',
+        opacity: 0.7,
+        marginLeft: '0.5em',
+      },
+      '.cm-foldGutter': {
+        minWidth: '20px',
+      },
+      '.cm-foldPlaceholder': {
+        background: 'var(--md-surface-container-high)',
+        border: '1px solid var(--md-outline-variant)',
+        borderRadius: 'var(--md-shape-xs)',
+        color: 'var(--md-on-surface-variant)',
+        padding: '0 8px',
+        margin: '0 2px',
+      },
+      '.cm-searchMatch': {
+        background: 'color-mix(in srgb, var(--md-tertiary) 20%, transparent)',
+        outline: '1px solid var(--md-tertiary)',
+      },
+      '.cm-searchMatch-selected': {
+        background: 'color-mix(in srgb, var(--md-tertiary) 35%, transparent)',
+      },
+    }),
+    // 自动补全显示在下方（移动端友好）
+    EditorView.theme({
+      '.cm-tooltip.cm-tooltip-autocomplete': {
+        '& > ul': {
+          maxHeight: 'min(280px, 40vh)',
+        },
+      },
+    }),
+    EditorView.contentAttributes.of({
+      'autocapitalize': 'off',
+      'autocorrect': 'off',
+      'spellcheck': 'false',
     }),
   ]
 

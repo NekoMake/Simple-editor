@@ -6,6 +6,38 @@ import { linter, type Diagnostic } from '@codemirror/lint'
 import { load as parseYAML } from 'js-yaml'
 import type { Extension } from '@codemirror/state'
 
+/**
+ * 翻译 YAML 错误信息为中文
+ * 基于真实 js-yaml 错误消息的精确匹配
+ */
+function translateYamlError(message: string): string {
+  const patterns: Array<[RegExp, string]> = [
+    // 真实的 js-yaml 错误消息（带详细提示的多行格式）
+    // 匹配主要错误信息，忽略后面的代码片段
+    [/^bad indentation of a mapping entry \(\d+:\d+\)[\s\S]*/i, '映射缩进错误'],
+    [/^bad indentation of a sequence entry \(\d+:\d+\)[\s\S]*/i, '序列缩进错误'],
+    [/^duplicated mapping key \(\d+:\d+\)[\s\S]*/i, '键名重复'],
+    [/^end of the stream or a document separator is expected \(\d+:\d+\)[\s\S]*/i, '格式错误'],
+    [/^can not read a block mapping entry[\s\S]*/i, '无法读取映射'],
+    [/^incomplete explicit mapping pair[\s\S]*/i, '映射不完整'],
+    [/^missed comma between flow collection entries[\s\S]*/i, '缺少逗号'],
+    [/^unexpected end of the stream[\s\S]*/i, '意外结束'],
+    
+    // 通用兜底
+    [/bad indentation/i, '缩进错误'],
+    [/duplicated/i, '重复'],
+    [/unexpected/i, '意外错误'],
+  ]
+
+  for (const [pattern, replacement] of patterns) {
+    if (pattern.test(message)) {
+      return message.replace(pattern, replacement)
+    }
+  }
+  
+  return message
+}
+
 function yamlLinter() {
   return (view: import('@codemirror/view').EditorView): Diagnostic[] => {
     const text = view.state.doc.toString()
@@ -18,9 +50,12 @@ function yamlLinter() {
         const mark = (e as { mark: { position: number; line: number } }).mark
         const pos = Math.min(mark.position, text.length - 1)
         const msg = e instanceof Error ? e.message : String(e)
-        return [{ from: pos, to: pos + 1, severity: 'error', message: msg }]
+        const translatedMsg = translateYamlError(msg)
+        return [{ from: pos, to: pos + 1, severity: 'error', message: translatedMsg }]
       }
-      return [{ from: 0, to: 0, severity: 'error', message: String(e) }]
+      const msg = String(e)
+      const translatedMsg = translateYamlError(msg)
+      return [{ from: 0, to: 0, severity: 'error', message: translatedMsg }]
     }
   }
 }

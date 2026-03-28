@@ -21,8 +21,38 @@
         </div>
       </div>
 
-      <!-- 主题色 -->
+      <!-- 首页背景图 -->
       <div class="list-item aligned-top">
+        <div class="item-content">
+          <div class="item-title">首页背景图</div>
+          <div class="item-sub" v-if="!settingsStore.homeBackgroundImage">未设置</div>
+          <div class="item-sub" v-else>已设置背景图</div>
+        </div>
+        <div class="bg-actions">
+          <input
+            ref="bgFileInput"
+            type="file"
+            accept="image/*"
+            style="display: none"
+            @change="handleBackgroundImageChange"
+          />
+          <button class="mini-btn" @click="chooseBackgroundImage">
+            <MdIcon name="image" size="sm" />
+            选择
+          </button>
+          <button 
+            v-if="settingsStore.homeBackgroundImage" 
+            class="mini-btn danger"
+            @click="clearBackgroundImage"
+          >
+            <MdIcon name="close" size="sm" />
+            清除
+          </button>
+        </div>
+      </div>
+
+      <!-- 主题色 -->
+      <div class="list-item aligned-top theme-color-item">
         <div class="item-content">
           <div class="item-title">主题颜色</div>
           <div class="item-sub">选择应用的主色调</div>
@@ -32,14 +62,19 @@
             v-for="(colors, key) in COLOR_SCHEMES"
             :key="key"
             class="color-dot"
-            :style="{ background: colors.primary }"
+            :style="{ background: key === 'custom' ? themeStore.settings.customPrimaryHex : colors.primary }"
             :class="{ active: themeStore.settings.colorScheme === key }"
-            @click="themeStore.setColorScheme(key as ThemeColorScheme)"
+            @click="handleColorSchemeClick(key as ThemeColorScheme)"
             :title="COLOR_NAMES[key as ThemeColorScheme]"
           >
             <MdIcon v-if="themeStore.settings.colorScheme === key" name="check" size="sm" style="color:#fff" />
           </button>
         </div>
+
+        <button class="mini-btn custom-color-btn" @click="openCustomColorPicker">
+          <MdIcon name="palette" size="sm" />
+          自定义取色
+        </button>
       </div>
 
       <div class="section-header">字体</div>
@@ -64,22 +99,44 @@
         <MdIcon name="chevron_right" style="color:var(--md-on-surface-variant)" />
       </div>
     </div>
+
+    <BottomSheet v-model="showCustomColorSheet" title="自定义主题色">
+      <div class="custom-color-sheet">
+        <ColorPicker v-model="customPrimaryHex" />
+        <div class="custom-color-meta">当前颜色 {{ customPrimaryHex }}</div>
+      </div>
+    </BottomSheet>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import TopAppBar from '@/components/ui/TopAppBar.vue'
 import MdIcon from '@/components/ui/MdIcon.vue'
+import BottomSheet from '@/components/ui/BottomSheet.vue'
+import ColorPicker from '@/components/ui/ColorPicker.vue'
 import { useThemeStore } from '@/stores/theme'
 import { useSettingsStore } from '@/stores/settings'
+import { useUiStore } from '@/stores/ui'
 import { useScrollBehavior } from '@/composables/useUI'
 import type { ThemeColorScheme } from '@/types'
 
 const router = useRouter()
 const themeStore = useThemeStore()
 const settingsStore = useSettingsStore()
+const uiStore = useUiStore()
 const { scrolled, onScroll } = useScrollBehavior()
+
+const bgFileInput = ref<HTMLInputElement | null>(null)
+const showCustomColorSheet = ref(false)
+
+const customPrimaryHex = computed({
+  get: () => themeStore.settings.customPrimaryHex,
+  set: (hex: string) => {
+    themeStore.setColorScheme('custom', hex)
+  },
+})
 
 const MODES = [
   { value: 'light', label: '浅色' },
@@ -97,11 +154,68 @@ const COLOR_NAMES: Record<ThemeColorScheme, string> = {
   rose: '玫瑰',
   custom: '自定义',
 }
+
+function chooseBackgroundImage() {
+  bgFileInput.value?.click()
+}
+
+function handleBackgroundImageChange(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+
+  if (!file.type.startsWith('image/')) {
+    uiStore.showSnackbar('请选择图片文件')
+    return
+  }
+
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    const result = e.target?.result as string
+    settingsStore.setHomeBackgroundImage(result)
+    uiStore.showSnackbar('背景图已设置')
+  }
+  reader.onerror = () => {
+    uiStore.showSnackbar('读取图片失败')
+  }
+  reader.readAsDataURL(file)
+}
+
+function clearBackgroundImage() {
+  settingsStore.setHomeBackgroundImage('')
+  uiStore.showSnackbar('已清除背景图')
+}
+
+function handleColorSchemeClick(scheme: ThemeColorScheme) {
+  themeStore.setColorScheme(scheme)
+}
+
+function openCustomColorPicker() {
+  themeStore.setColorScheme('custom')
+  showCustomColorSheet.value = true
+}
 </script>
 
 <style scoped>
 .settings-view { display: flex; flex-direction: column; height: 100%; background: var(--md-surface); }
 .settings-body { flex: 1; overflow-y: auto; padding-bottom: 40px; }
+
+.bg-actions { display: flex; gap: 8px; align-items: center; }
+.mini-btn {
+  height: 32px; padding: 0 12px;
+  border-radius: 8px; border: 1px solid var(--md-outline);
+  background: var(--md-surface-container-high);
+  font-size: 13px; font-weight: 500;
+  color: var(--md-on-surface);
+  cursor: pointer; font-family: inherit;
+  display: flex; align-items: center; gap: 4px;
+  white-space: nowrap;
+}
+.mini-btn:active { opacity: 0.7; }
+.mini-btn.danger {
+  color: var(--md-error);
+  border-color: var(--md-error);
+}
 .section-header {
   font-size: 12px; font-weight: 600; letter-spacing: .5px;
   color: var(--md-primary); text-transform: uppercase;
@@ -113,7 +227,7 @@ const COLOR_NAMES: Record<ThemeColorScheme, string> = {
 }
 .list-item.aligned-top { align-items: flex-start; padding-top: 14px; }
 .list-item:active { background: color-mix(in srgb, var(--md-on-surface) 8%, transparent); }
-.item-content { flex: 1; }
+.item-content { flex: 1; min-width: 0; }
 .item-title { font-size: 16px; color: var(--md-on-surface); }
 .item-sub { font-size: 14px; color: var(--md-on-surface-variant); margin-top: 2px; }
 .mode-chips { display: flex; gap: 6px; }
@@ -129,13 +243,56 @@ const COLOR_NAMES: Record<ThemeColorScheme, string> = {
   color: var(--md-on-secondary-container);
   border-color: transparent;
 }
-.color-grid { display: flex; gap: 8px; flex-wrap: wrap; padding-top: 4px; }
+.custom-color-btn {
+  margin-left: auto;
+  margin-top: 10px;
+}
+.color-grid {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  padding-top: 4px;
+  flex: 0 0 auto;
+}
 .color-dot {
-  width: 36px; height: 36px; border-radius: 50%;
-  border: none; cursor: pointer;
+  width: 34px; height: 34px; border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--md-on-surface) 24%, transparent);
+  cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   box-shadow: 0 0 0 0 transparent;
-  transition: box-shadow .2s;
+  transition: box-shadow .2s, transform .2s;
 }
-.color-dot.active { box-shadow: 0 0 0 3px var(--md-on-surface), 0 0 0 5px currentColor; }
+.color-dot.active {
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--md-surface) 88%, transparent),
+    0 0 0 4px color-mix(in srgb, var(--md-on-surface) 45%, transparent);
+}
+
+.custom-color-sheet {
+  display: grid;
+  gap: 10px;
+}
+
+.custom-color-meta {
+  font-size: 13px;
+  color: var(--md-on-surface-variant);
+}
+
+@media (max-width: 420px) {
+  .theme-color-item {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .theme-color-item .item-content {
+    flex: 1 1 100%;
+  }
+
+  .theme-color-item .color-grid {
+    width: 100%;
+    justify-content: flex-start;
+    padding-top: 8px;
+  }
+}
 </style>

@@ -1,5 +1,5 @@
 import { json, jsonParseLinter } from '@codemirror/lang-json'
-import { linter } from '@codemirror/lint'
+import { linter, type Diagnostic } from '@codemirror/lint'
 import {
   autocompletion,
   snippetCompletion,
@@ -8,8 +8,63 @@ import {
 } from '@codemirror/autocomplete'
 import { syntaxTree } from '@codemirror/language'
 import type { Extension } from '@codemirror/state'
+import type { EditorView } from '@codemirror/view'
 
 type JsonPos = 'key' | 'value' | 'array' | 'root'
+
+/**
+ * 翻译 JSON 错误信息为中文
+ * 基于真实 JSON.parse 错误消息的精确匹配
+ */
+function translateJsonError(message: string): string {
+  const patterns: Array<[RegExp, string]> = [
+    // 真实的 JSON.parse 错误消息（按优先级排序）
+    [/^Bad control character in string literal in JSON at position \d+ \(line \d+ column \d+\)$/i, '字符串中有非法控制字符'],
+    [/^Expected double-quoted property name in JSON at position \d+ \(line \d+ column \d+\)$/i, '期望双引号属性名'],
+    [/^Expected ':' after property name in JSON at position \d+ \(line \d+ column \d+\)$/i, '属性名后需要 ":"'],
+    [/^Expected ',' or '}' after property value in JSON at position \d+ \(line \d+ column \d+\)$/i, '属性值后需要 "," 或 "}"'],
+    [/^Expected property name or '}' in JSON at position \d+ \(line \d+ column \d+\)$/i, '期望属性名或 "}"'],
+    [/^Unexpected non-whitespace character after JSON at position \d+ \(line \d+ column \d+\)$/i, 'JSON 后有多余字符'],
+    [/^Unexpected token '(.)', ".*" is not valid JSON$/i, '意外的字符 "$1"'],
+    [/^Unexpected token '(\w+)', ".*" is not valid JSON$/i, '意外的标记 "$1"'],
+    [/^Unexpected token ([^,]+), ".*" is not valid JSON$/i, '不是有效的 JSON'],
+    [/^Unexpected end of JSON input$/i, 'JSON 意外结束'],
+    [/^Unterminated string in JSON at position \d+$/i, '字符串未闭合'],
+    
+    // 通用兜底模式
+    [/Bad control character/i, '非法控制字符'],
+    [/Expected/i, '格式错误'],
+    [/Unexpected/i, '意外的内容'],
+  ]
+
+  for (const [pattern, replacement] of patterns) {
+    if (pattern.test(message)) {
+      return message.replace(pattern, replacement)
+    }
+  }
+  
+  return message
+}
+
+/**
+ * 汉化的 JSON linter
+ */
+function localizedJsonLinter() {
+  const baseLinter = jsonParseLinter()
+  return (view: EditorView): Diagnostic[] => {
+    const diagnostics = baseLinter(view)
+    // 翻译并简化错误信息
+    return diagnostics.map(diag => {
+      let message = translateJsonError(diag.message)
+      // 移除详细的位置信息（已经通过行高亮显示）
+      message = message.replace(/位置\s*\d+\s*\(.*?\)/g, '').trim()
+      return {
+        ...diag,
+        message,
+      }
+    })
+  }
+}
 
 /**
  * 通过 Lezer 语法树判断光标的 JSON 语义位置：
@@ -101,7 +156,7 @@ function jsonCompletion(ctx: CompletionContext): CompletionResult | null {
 export function buildJsonExtensions(): Extension[] {
   return [
     json(),
-    linter(jsonParseLinter()),
+    linter(localizedJsonLinter()),
     autocompletion({ override: [jsonCompletion] }),
   ]
 }

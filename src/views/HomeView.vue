@@ -2,19 +2,13 @@
   <div class="home-view">
 
     <!-- Hero 头部 -->
-    <div class="home-hero">
+    <div 
+      class="home-hero"
+      :style="heroStyle"
+    >
       <div class="hero-top-actions">
         <IconButton icon="search" aria-label="搜索" @click="toggleSearch" />
         <IconButton icon="settings" aria-label="设置" @click="router.push('/settings')" />
-      </div>
-      <div class="hero-body">
-        <div class="hero-icon-wrap">
-          <MdIcon name="edit_note" />
-        </div>
-        <div class="hero-text">
-          <div class="hero-title">简单编辑</div>
-          <div class="hero-sub">多格式文本编辑器</div>
-        </div>
       </div>
     </div>
 
@@ -64,6 +58,16 @@
         <MdIcon name="folder_open" size="xl" />
         <p>还没有文件</p>
         <p class="empty-hint">点击右下角 + 新建文件</p>
+      </div>
+    </div>
+
+    <div class="home-footer-intro">
+      <div class="footer-intro-icon">
+        <MdIcon name="edit_note" size="sm" />
+      </div>
+      <div class="footer-intro-text">
+        <div class="footer-intro-title">简单编辑</div>
+        <div class="footer-intro-sub">多格式文本编辑器</div>
       </div>
     </div>
 
@@ -151,7 +155,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import IconButton from '@/components/ui/IconButton.vue'
 import MdIcon from '@/components/ui/MdIcon.vue'
@@ -163,6 +167,7 @@ import FileCard from '@/components/FileCard.vue'
 import SnackbarHost from '@/components/ui/SnackbarHost.vue'
 import { useFileStore } from '@/stores/files'
 import { useUiStore } from '@/stores/ui'
+import { useSettingsStore } from '@/stores/settings'
 import { useScrollBehavior } from '@/composables/useUI'
 import { MODULE_REGISTRY } from '@/editors/registry'
 import type { FileFormat, AppFile } from '@/types'
@@ -170,7 +175,20 @@ import type { FileFormat, AppFile } from '@/types'
 const router = useRouter()
 const fileStore = useFileStore()
 const uiStore = useUiStore()
+const settingsStore = useSettingsStore()
 const { scrolled, onScroll } = useScrollBehavior()
+
+// 计算Hero背景样式
+const heroStyle = computed(() => {
+  if (!settingsStore.homeBackgroundImage) {
+    return {}
+  }
+  return {
+    backgroundImage: `url(${settingsStore.homeBackgroundImage})`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center'
+  }
+})
 
 const FORMAT_OPTIONS = [
   { label: '全部', value: 'all' },
@@ -294,54 +312,21 @@ async function doDelete() {
 .home-hero {
   flex-shrink: 0;
   background: var(--md-primary-container);
-  padding: 0 8px 20px;
+  padding: 0 8px 16px;
   position: relative;
+  min-height: 160px;
+  background-repeat: no-repeat;
 }
 .hero-top-actions {
   display: flex;
   justify-content: flex-end;
   padding-top: 8px;
   gap: 4px;
+  position: relative;
+  z-index: 1;
 }
 .hero-top-actions :deep(.icon-btn) {
   color: var(--md-on-primary-container);
-}
-.hero-body {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 8px 12px 0;
-}
-.hero-icon-wrap {
-  width: 64px;
-  height: 64px;
-  border-radius: 20px;
-  background: var(--md-primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  font-size: 36px;
-  color: var(--md-on-primary);
-}
-.hero-icon-wrap .md-icon {
-  font-size: 36px;
-}
-.hero-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.hero-title {
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--md-on-primary-container);
-  letter-spacing: -0.3px;
-}
-.hero-sub {
-  font-size: 13px;
-  color: var(--md-on-primary-container);
-  opacity: 0.75;
 }
 
 /* ---- 搜索框 ---- */
@@ -371,6 +356,43 @@ async function doDelete() {
 
 /* ---- 文件列表（可滚动区域） ---- */
 .file-list { flex: 1; overflow-y: auto; padding: 0 8px; }
+
+.home-footer-intro {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 12px 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--md-surface-container-low);
+  border: 1px solid var(--md-outline-variant);
+}
+.footer-intro-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: var(--md-primary-container);
+  color: var(--md-on-primary-container);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.footer-intro-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+.footer-intro-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--md-on-surface);
+}
+.footer-intro-sub {
+  font-size: 12px;
+  color: var(--md-on-surface-variant);
+}
 
 /* ---- FAB ---- */
 .fab-area {

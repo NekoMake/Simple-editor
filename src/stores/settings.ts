@@ -14,17 +14,18 @@ const DEFAULT_READING: ReadingSettings = {
 }
 
 const DEFAULT_EDITOR: EditorSettings = {
-  fontSize: 14,
+  fontSize: 16,
   tabSize: 2,
   wordWrap: true,
   lineNumbers: true,
-  fontFamily: 'var(--app-font-mono)',
+  fontFamily: 'var(--app-font-sans)',
 }
 
 export const useSettingsStore = defineStore('settings', () => {
   const reading = ref<ReadingSettings>({ ...DEFAULT_READING })
   const editor = ref<EditorSettings>({ ...DEFAULT_EDITOR })
   const customFonts = ref<CustomFont[]>([])
+  const homeBackgroundImage = ref<string>('')  // 首页背景图
 
   function updateReading(patch: Partial<ReadingSettings>) {
     Object.assign(reading.value, patch)
@@ -48,15 +49,21 @@ export const useSettingsStore = defineStore('settings', () => {
     customFonts.value = customFonts.value.filter(f => f.name !== name)
   }
 
+  function setHomeBackgroundImage(imageUrl: string) {
+    homeBackgroundImage.value = imageUrl
+  }
+
   return {
     reading,
     editor,
     customFonts,
+    homeBackgroundImage,
     updateReading,
     resetReading,
     updateEditor,
     addFont,
     removeFont,
+    setHomeBackgroundImage,
   }
 }, {
   persist: {
