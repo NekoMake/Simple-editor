@@ -1,20 +1,28 @@
 <template>
-  <div class="md-preview" v-html="renderedHtml"></div>
+  <div class="md-preview" ref="mdContainer" v-html="renderedHtml"></div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, watch, nextTick, ref } from 'vue'
 import { Marked } from 'marked'
 import { markedHighlight } from 'marked-highlight'
 import hljs from 'highlight.js'
 import DOMPurify from 'dompurify'
+import mermaid from 'mermaid'
 
 const props = defineProps<{ content: string }>()
+
+mermaid.initialize({ startOnLoad: false, theme: 'default' })
+
+const mdContainer = ref<HTMLElement | null>(null)
 
 const marked = new Marked(
   markedHighlight({
     langPrefix: 'hljs language-',
     highlight(code, lang) {
+      if (lang === 'mermaid') {
+        return code // Do not highlight mermaid
+      }
       const language = hljs.getLanguage(lang) ? lang : 'plaintext'
       return hljs.highlight(code, { language }).value
     },
@@ -23,6 +31,17 @@ const marked = new Marked(
 
 marked.setOptions({ gfm: true, breaks: true })
 
+// 覆盖默认的代码块渲染，如果是 mermaid 直接输出 div 而不被 pre/code 包裹
+const renderer = {
+  code({ text, lang }: { text: string; lang?: string }) {
+    if (lang === 'mermaid') {
+      return `<div class="mermaid">${text}</div>`
+    }
+    return false // fallback to default
+  }
+}
+marked.use({ renderer })
+
 const renderedHtml = computed(() => {
   const raw = marked.parse(props.content) as string
   return DOMPurify.sanitize(raw, {
@@ -30,6 +49,27 @@ const renderedHtml = computed(() => {
     FORBID_ATTR: ['onerror', 'onload', 'onclick'],
   })
 })
+
+watch(renderedHtml, async () => {
+  await nextTick()
+  if (mdContainer.value) {
+    const nodes = mdContainer.value.querySelectorAll('.mermaid')
+    for (const node of nodes) {
+      if (node.getAttribute('data-processed')) continue
+      try {
+        const text = node.textContent || ''
+        // Create a unique ID for the mermaid diagram
+        const id = `mermaid-${Date.now()}-${Math.floor(Math.random() * 10000)}`
+        const { svg } = await mermaid.render(id, text)
+        node.innerHTML = svg
+        node.setAttribute('data-processed', 'true')
+      } catch (e: any) {
+        console.error('Mermaid render error', e)
+        node.innerHTML = `<div class="error-msg" style="color:var(--md-error);border:1px solid var(--md-error);padding:10px;border-radius:4px;font-family:var(--app-font-mono);white-space:pre-wrap;">Diagram error: ${e.message || e}</div>`
+      }
+    }
+  }
+}, { immediate: true })
 </script>
 
 <style>

@@ -190,6 +190,38 @@ export const useFileStore = defineStore('files', () => {
     return appFile
   }
 
+  // ---- 导入外部文件内容 ----
+  async function importWebContent(fileName: string, content: string): Promise<AppFile> {
+    const format = getFileFormat(fileName)
+    const id = generateId()
+    const destPath = `${id}.${format}`
+    const now = Date.now()
+
+    // 写入内部存储
+    await Filesystem.writeFile({
+      path: `${APP_DIR}/${destPath}`,
+      directory: Directory.Data,
+      data: content,
+      encoding: Encoding.UTF8,
+      recursive: true,
+    })
+
+    const appFile: AppFile = {
+      id,
+      name: fileName,
+      format,
+      path: destPath,
+      size: new Blob([content]).size,
+      createdAt: now,
+      modifiedAt: now,
+      titleCache: content.split('\n')[0].replace(/^#+\s*/, '').slice(0, 60),
+    }
+
+    files.value.unshift(appFile)
+    await saveMeta()
+    return appFile
+  }
+
   // ---- 导出文件 ----
   async function exportFile(file: AppFile): Promise<void> {
     const content = await readContent(file)
@@ -250,6 +282,7 @@ export const useFileStore = defineStore('files', () => {
     writeContent,
     createFile,
     importFile,
+    importWebContent,
     exportFile,
     deleteFile,
     renameFile,

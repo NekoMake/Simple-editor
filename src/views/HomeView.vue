@@ -10,6 +10,10 @@
         <IconButton icon="search" aria-label="搜索" @click="toggleSearch" />
         <IconButton icon="settings" aria-label="设置" @click="router.push('/settings')" />
       </div>
+      <div class="hero-greeting">
+        <h1 class="greeting-text">{{ greeting }}</h1>
+        <p class="greeting-sub">欢迎回到简单编辑</p>
+      </div>
     </div>
 
     <!-- 搜索框 -->
@@ -44,31 +48,41 @@
     </div>
 
     <!-- 文件列表 -->
-    <div class="file-list" :class="settingsStore.homeViewMode" @scroll.passive="onScroll">
-      <div v-if="fileStore.isLoading" class="empty-state">
-        <div class="loading-dots"><span></span><span></span><span></span></div>
-      </div>
+    <div class="file-list" :class="{ 'is-empty': !fileStore.isLoading && fileStore.filteredFiles.length === 0 }" @scroll.passive="onScroll">
+      <Transition name="switch-list" mode="out-in">
+        <div v-if="fileStore.isLoading" class="empty-state" key="loading">
+          <div class="loading-dots"><span></span><span></span><span></span></div>
+        </div>
 
-      <template v-else-if="fileStore.filteredFiles.length > 0">
-        <FileCard
-          v-for="file in fileStore.filteredFiles"
-          :key="file.id"
-          :file="file"
-          :view-mode="settingsStore.homeViewMode"
-          @click="openFile(file.id)"
-          @long-press="showFileMenu(file.id)"
-        >
-          <template #actions>
-            <IconButton icon="more_vert" aria-label="更多操作" @click.stop="showFileMenu(file.id)" />
-          </template>
-        </FileCard>
-      </template>
+        <div v-else-if="fileStore.filteredFiles.length > 0" class="file-list-content" :class="settingsStore.homeViewMode" :key="'list-' + fileStore.filter.format">
+          <FileCard
+            v-for="file in fileStore.filteredFiles"
+            :key="file.id"
+            :file="file"
+            :view-mode="settingsStore.homeViewMode"
+            @click="openFile(file.id)"
+            @long-press="showFileMenu(file.id)"
+          >
+            <template #actions>
+              <IconButton icon="more_vert" aria-label="更多操作" @click.stop="showFileMenu(file.id)" />
+            </template>
+          </FileCard>
+        </div>
 
-      <div v-else class="empty-state">
-        <MdIcon name="folder_open" size="xl" />
-        <p>还没有文件</p>
-        <p class="empty-hint">点击右下角 + 新建文件</p>
-      </div>
+        <div v-else class="empty-state" :key="'empty-state-' + fileStore.filter.format">
+          <div class="empty-icon-wrapper">
+            <MdIcon name="edit_document" size="xl" />
+          </div>
+          <p class="empty-title">一切从这里开始</p>
+          <p class="empty-hint">
+            未找到{{ fileStore.filter.format !== 'all' ? '对应的 ' + fileStore.filter.format.toUpperCase() + ' ' : '' }}文件
+          </p>
+          <MdButton variant="filled" @click="showCreateSheet = true" class="empty-cta">
+            <MdIcon name="add" size="sm" style="margin-right: 8px;" />
+            立即创建
+          </MdButton>
+        </div>
+      </Transition>
     </div>
 
     <div class="home-footer-intro">
@@ -82,11 +96,36 @@
     </div>
 
     <!-- 排序/操作 FAB -->
-    <div class="fab-area">
-      <button class="fab fab-primary" @click="showCreateSheet = true" aria-label="新建文件">
-        <MdIcon name="add" size="lg" />
-      </button>
-    </div>
+    <transition name="fab-transition">
+      <div v-show="!showFabMenu" class="fab-area">
+        <button class="fab fab-primary" @click="showFabMenu = true" aria-label="添加文件">
+          <MdIcon name="add" size="lg" />
+        </button>
+      </div>
+    </transition>
+
+    <!-- 隐藏的文件选择器 -->
+    <input 
+      type="file" 
+      ref="fileInputRef" 
+      style="display: none" 
+      accept=".txt,.md,.json,.toml,.yaml,.yml" 
+      @change="onFileImportChange" 
+    />
+
+    <!-- FAB 选择菜单 BottomSheet -->
+    <BottomSheet v-model="showFabMenu" title="请选择操作">
+      <div class="action-list">
+        <button class="action-item" @click="openCreateSheet">
+          <MdIcon name="edit_document" />
+          <span>新建空白文件</span>
+        </button>
+        <button class="action-item" @click="triggerImport">
+          <MdIcon name="file_upload" />
+          <span>从本地导入文件</span>
+        </button>
+      </div>
+    </BottomSheet>
 
     <!-- 新建文件 BottomSheet -->
     <BottomSheet v-model="showCreateSheet" title="新建文件">
@@ -188,6 +227,16 @@ const uiStore = useUiStore()
 const settingsStore = useSettingsStore()
 const { scrolled, onScroll } = useScrollBehavior()
 
+// 动态问候语
+const greeting = computed(() => {
+  const hour = new Date().getHours()
+  if (hour < 6) return '夜深了'
+  if (hour < 12) return '早上好'
+  if (hour < 14) return '中午好'
+  if (hour < 18) return '下午好'
+  return '晚上好'
+})
+
 // 计算Hero背景样式
 const heroStyle = computed(() => {
   if (!settingsStore.homeBackgroundImage) {
@@ -234,8 +283,42 @@ function toggleViewMode() {
   settingsStore.setHomeViewMode(newMode)
 }
 
-// ---- 新建 ----
+// ---- FAB 操作与导入 ----
+const showFabMenu = ref(false)
 const showCreateSheet = ref(false)
+const fileInputRef = ref<HTMLInputElement | null>(null)
+
+function openCreateSheet() {
+  showFabMenu.value = false
+  setTimeout(() => {
+    showCreateSheet.value = true
+  }, 200) // 等待上一个 bottomsheet 关闭
+}
+
+function triggerImport() {
+  showFabMenu.value = false
+  fileInputRef.value?.click()
+}
+
+async function onFileImportChange(e: Event) {
+  const target = e.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (!file) return
+
+  try {
+    const text = await file.text()
+    const appFile = await fileStore.importWebContent(file.name, text)
+    uiStore.showSnackbar('导入成功！')
+    // 立即跳转至该文件
+    router.push(`/editor/${appFile.id}`)
+  } catch (err) {
+    uiStore.showSnackbar('文件导入失败')
+  } finally {
+    target.value = '' // 清除 input 状态
+  }
+}
+
+// ---- 新建 ----
 const showNameDialog = ref(false)
 const pendingFormat = ref<FileFormat | null>(null)
 const newFileName = ref('')
@@ -332,6 +415,10 @@ async function doDelete() {
   position: relative;
   min-height: 160px;
   background-repeat: no-repeat;
+  border-radius: 0 0 28px 28px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  margin-bottom: 8px;
+  z-index: 2;
 }
 .hero-top-actions {
   display: flex;
@@ -344,13 +431,40 @@ async function doDelete() {
 .hero-top-actions :deep(.icon-btn) {
   color: var(--md-on-primary-container);
 }
+.hero-greeting {
+  padding: 8px 16px 16px;
+  position: relative;
+  z-index: 1;
+}
+.greeting-text {
+  font-size: 32px;
+  font-weight: 400;
+  margin: 0;
+  color: var(--md-on-primary-container);
+  letter-spacing: -0.5px;
+}
+.greeting-sub {
+  font-size: 14px;
+  margin: 6px 0 0;
+  color: var(--md-on-primary-container);
+  opacity: 0.8;
+}
 
 /* ---- 搜索框 ---- */
-.search-bar { padding: 8px 16px; background: var(--md-surface); }
+.search-bar { 
+  padding: 8px 16px; 
+  background: transparent; 
+  position: absolute;
+  top: 60px;
+  left: 0;
+  right: 0;
+  z-index: 10;
+}
 .search-field {
   display: flex; align-items: center; gap: 8px;
   background: var(--md-surface-container-high);
   border-radius: 28px; padding: 4px 4px 4px 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 .search-input {
   flex: 1; border: none; background: transparent;
@@ -380,15 +494,55 @@ async function doDelete() {
 }
 
 /* ---- 文件列表（可滚动区域） ---- */
-.file-list { flex: 1; overflow-y: auto; padding: 0 8px; }
+.file-list { flex: 1; overflow-y: auto; padding: 0 8px; position: relative; }
+
+.file-list-content {
+  width: 100%;
+}
+
+/* 交错进场动画 */
+.file-list-content > *, .empty-state {
+  animation: fadeUp 0.4s cubic-bezier(0.2, 0, 0, 1) backwards;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+/* 交错动画延迟 */
+.file-list-content > *:nth-child(1) { animation-delay: 0.05s; }
+.file-list-content > *:nth-child(2) { animation-delay: 0.10s; }
+.file-list-content > *:nth-child(3) { animation-delay: 0.15s; }
+.file-list-content > *:nth-child(4) { animation-delay: 0.20s; }
+.file-list-content > *:nth-child(5) { animation-delay: 0.25s; }
+.file-list-content > *:nth-child(6) { animation-delay: 0.30s; }
+.file-list-content > *:nth-child(n+7) { animation-delay: 0.35s; }
+
+/* 切换列表的退场/进场动画 */
+.switch-list-enter-active,
+.switch-list-leave-active {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.switch-list-enter-from {
+  opacity: 0;
+  /* 进场不偏移，交给内部元素的 fadeUp 去偏移，只控制外壳透明度避免闪烁 */
+}
+.switch-list-leave-to {
+  opacity: 0;
+  transform: translateY(-15px) scale(0.98);
+}
 
 /* Grid视图布局 */
-.file-list.grid {
+.file-list-content.grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
   gap: 8px;
   padding: 8px;
   align-content: start;
+}
+
+.file-list.is-empty {
+  display: flex !important;
+  flex-direction: column;
 }
 
 .home-footer-intro {
@@ -399,8 +553,13 @@ async function doDelete() {
   margin: 8px 12px 12px;
   padding: 10px 12px;
   border-radius: 12px;
-  background: var(--md-surface-container-low);
-  border: 1px solid var(--md-outline-variant);
+  background: transparent;
+  border: 1px dashed var(--md-outline-variant);
+  opacity: 0.6;
+  transition: opacity 0.3s;
+}
+.home-footer-intro:hover {
+  opacity: 1;
 }
 .footer-intro-icon {
   width: 32px;
@@ -431,18 +590,33 @@ async function doDelete() {
 /* ---- FAB ---- */
 .fab-area {
   position: fixed; bottom: 24px; right: 20px;
-  display: flex; flex-direction: column; gap: 12px; align-items: center;
+  display: flex; flex-direction: column; gap: 12px; align-items: flex-end;
+  z-index: 100;
 }
 .fab-primary {
-  width: 56px; height: 56px; border-radius: 16px;
+  height: 56px; 
+  width: 56px;
+  border-radius: 16px;
   background: var(--md-primary-container);
   color: var(--md-on-primary-container);
   border: none; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   box-shadow: 0 1px 2px rgba(0,0,0,.3),0 2px 6px 2px rgba(0,0,0,.15);
-  transition: transform .15s;
+  transition: all .25s cubic-bezier(0.2, 0, 0, 1) !important;
+  padding: 0;
+  overflow: hidden;
 }
-.fab-primary:active { transform: scale(.92); }
+.fab-primary:active { transform: scale(.95); box-shadow: 0 1px 2px rgba(0,0,0,.3); }
+
+.fab-transition-enter-active,
+.fab-transition-leave-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.fab-transition-enter-from,
+.fab-transition-leave-to {
+  opacity: 0;
+  transform: scale(0.8) translateY(20px);
+}
 
 .new-file-grid {
   display: grid;
@@ -477,10 +651,33 @@ async function doDelete() {
 .empty-state {
   display: flex; flex-direction: column; align-items: center;
   justify-content: center; gap: 12px;
-  min-height: 50vh;
-  color: var(--md-on-surface-variant);
+  flex: 1; /* 取代 min-height: 50vh ，利用父级撑开完全居中 */
+  color: var(--md-on-surface);
+  text-align: center;
+  padding-bottom: 10vh; /* 稍微靠上一点视觉中心更好看 */
 }
-.empty-hint { font-size: 14px; }
+.empty-icon-wrapper {
+  width: 80px; height: 80px;
+  background: var(--md-surface-container-highest);
+  border-radius: 24px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--md-primary);
+  margin-bottom: 8px;
+}
+.empty-title {
+  font-size: 18px;
+  font-weight: 500;
+  margin: 0;
+}
+.empty-hint { 
+  font-size: 14px; 
+  color: var(--md-on-surface-variant);
+  margin: 0 0 16px 0;
+}
+.empty-cta {
+  border-radius: 20px;
+  padding: 0 24px;
+}
 
 .text-field { display: flex; flex-direction: column; gap: 6px; }
 .text-field label { font-size: 12px; color: var(--md-on-surface-variant); }
@@ -495,8 +692,12 @@ async function doDelete() {
 
 /* 搜索展开动画 */
 .search-expand-enter-active, .search-expand-leave-active {
-  transition: max-height .25s ease, opacity .2s;
-  overflow: hidden;
+  transition: all .3s cubic-bezier(0.2, 0, 0, 1);
+  transform-origin: top center;
+}
+.search-expand-enter-from, .search-expand-leave-to {
+  opacity: 0;
+  transform: translateY(-10px) scale(0.95);
 }
 .search-expand-enter-from, .search-expand-leave-to { max-height: 0; opacity: 0; }
 .search-expand-enter-to, .search-expand-leave-from { max-height: 80px; }
