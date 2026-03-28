@@ -15,6 +15,9 @@
           :aria-label="mode === 'edit' ? '预览' : '编辑'"
           @click="toggleMode"
         />
+        <!-- 还原与撤回按钮 -->
+        <IconButton v-show="mode === 'edit'" icon="undo" aria-label="撤回" @click="handleUndo" />
+        <IconButton v-show="mode === 'edit'" icon="redo" aria-label="还原" @click="handleRedo" />
         <!-- 保存状态 -->
         <IconButton
           :icon="isDirty ? 'save' : 'check_circle'"
@@ -98,6 +101,24 @@
       <EditorSettingsPanel />
     </BottomSheet>
 
+    <!-- Markdown大纲 -->
+    <MdDialog v-model="showMarkdownOutline" title="大纲">
+      <div v-if="markdownHeadings.length === 0" class="empty-outline">
+        暂无标题
+      </div>
+      <div v-else class="outline-list">
+        <div 
+          v-for="(heading, index) in markdownHeadings" 
+          :key="index"
+          class="outline-item"
+          :style="{ paddingLeft: `${(heading.level - 1) * 16}px` }"
+          @click="jumpToHeading(heading)"
+        >
+          <span class="outline-text">{{ heading.text }}</span>
+        </div>
+      </div>
+    </MdDialog>
+
     <SnackbarHost />
   </div>
 </template>
@@ -109,6 +130,7 @@ import TopAppBar from '@/components/ui/TopAppBar.vue'
 import IconButton from '@/components/ui/IconButton.vue'
 import MdIcon from '@/components/ui/MdIcon.vue'
 import MdButton from '@/components/ui/MdButton.vue'
+import MdDialog from '@/components/ui/MdDialog.vue'
 import BottomSheet from '@/components/ui/BottomSheet.vue'
 import SnackbarHost from '@/components/ui/SnackbarHost.vue'
 import EditorToolbar from '@/components/ui/EditorToolbar.vue'
@@ -124,6 +146,7 @@ import { getModuleById } from '@/editors/registry'
 import { useSwipeBack } from '@/composables/useUI'
 import { getToolbarActions } from '@/editors/toolbars'
 import type { ToolbarAction } from '@/types/toolbar'
+import { getMarkdownHeadings, type MarkdownHeading } from '@/editors/plugins/markdownOutline'
 
 const props = defineProps<{ fileId: string }>()
 const router = useRouter()
@@ -139,6 +162,8 @@ const mode = ref<'edit' | 'preview'>('edit')
 const showMenu = ref(false)
 const showReadingSettings = ref(false)
 const showEditorSettings = ref(false)
+const showMarkdownOutline = ref(false)
+const markdownHeadings = ref<MarkdownHeading[]>([])
 const editorRef = ref<InstanceType<typeof CodeMirrorEditor> | null>(null)
 
 const { content, isDirty, isLoading, load, save, onChange } = file.value
@@ -171,6 +196,16 @@ async function doExport() {
 function handleToolbarAction(action: ToolbarAction) {
   if (!editorRef.value) return
   
+  // 内置特例处理：Markdown大纲
+  if (action.id === 'md-outline') {
+    const state = editorRef.value.getEditorState?.()
+    if (state) {
+      markdownHeadings.value = getMarkdownHeadings(state)
+      showMarkdownOutline.value = true
+    }
+    return
+  }
+
   // 如果有自定义处理器，优先执行
   if (action.handler) {
     action.handler()
@@ -182,6 +217,25 @@ function handleToolbarAction(action: ToolbarAction) {
     editorRef.value.insertText(action.insertText)
   } else if (action.wrapText) {
     editorRef.value.insertText('', action.wrapText)
+  }
+}
+
+function handleUndo() {
+  if (editorRef.value) {
+    editorRef.value.undo()
+  }
+}
+
+function handleRedo() {
+  if (editorRef.value) {
+    editorRef.value.redo()
+  }
+}
+
+function jumpToHeading(heading: MarkdownHeading) {
+  showMarkdownOutline.value = false
+  if (editorRef.value && editorRef.value.scrollToPosition) {
+    editorRef.value.scrollToPosition(heading.pos)
   }
 }
 
@@ -244,4 +298,39 @@ onMounted(() => {
 .loading-dots span:nth-child(2) { animation-delay: .2s; }
 .loading-dots span:nth-child(3) { animation-delay: .4s; }
 @keyframes bounce { to { transform: translateY(-8px); opacity: .6; } }
+
+/* 大纲样式 */
+.outline-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 50vh;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+.outline-item {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 8px 16px;
+  border-radius: var(--md-shape-sm, 8px);
+  cursor: pointer;
+  transition: background-color 0.2s;
+  color: var(--md-on-surface);
+}
+.outline-item:active, .outline-item:hover {
+  background-color: var(--md-surface-container-high, rgba(0, 0, 0, 0.08));
+}
+.outline-text {
+  font-size: 15px;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.empty-outline {
+  padding: 24px;
+  text-align: center;
+  color: var(--md-on-surface-variant);
+}
 </style>

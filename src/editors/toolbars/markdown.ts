@@ -5,6 +5,11 @@ import type { ToolbarAction } from '@/types/toolbar'
  */
 export const markdownActions: ToolbarAction[] = [
   {
+    id: 'md-outline',
+    label: '大纲',
+    icon: 'menu_book',
+  },
+  {
     id: 'md-heading',
     label: '标题',
     icon: 'title',

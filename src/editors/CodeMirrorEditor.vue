@@ -6,6 +6,7 @@
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { EditorView } from '@codemirror/view'
 import { EditorState } from '@codemirror/state'
+import { undo, redo } from '@codemirror/commands'
 import { buildBaseExtensions } from '@/editors/base'
 import { getLanguageExtensions } from '@/editors/langLoader'
 import { useSettingsStore } from '@/stores/settings'
@@ -105,9 +106,34 @@ function insertText(text: string | ((selection: string) => string), wrapText?: {
   view.focus()
 }
 
+function performUndo() {
+  if (view) undo(view)
+}
+
+function performRedo() {
+  if (view) redo(view)
+}
+
+function scrollToPosition(pos: number) {
+  if (!view) return
+  view.dispatch({
+    selection: { anchor: pos },
+    effects: EditorView.scrollIntoView(pos, { y: 'start' })
+  })
+  view.focus()
+}
+
+function getEditorState() {
+  return view?.state
+}
+
 // 暴露方法给父组件
 defineExpose({
   insertText,
+  undo: performUndo,
+  redo: performRedo,
+  scrollToPosition,
+  getEditorState
 })
 
 // 外部修改内容时同步（不破坏光标）
