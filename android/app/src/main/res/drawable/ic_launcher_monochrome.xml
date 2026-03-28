@@ -3,19 +3,22 @@
     android:viewportHeight="48"
     android:width="108dp"
     android:height="108dp">
+    <!-- Monochrome icon for Android 13+ themed icons -->
+    <!-- Document lines -->
     <path
-        android:pathData="M12 14h24M12 20h16M12 26h20M12 32h12"
+        android:pathData="M12,14 L36,14 M12,20 L28,20 M12,26 L32,26 M12,32 L24,32"
         android:strokeColor="#000000"
         android:strokeWidth="2.5"
         android:strokeLineCap="round" />
+    <!-- Checkmark circle -->
     <path
-        android:pathData="M43 30A7 7 0 0 1 29 30A7 7 0 0 1 43 30Z"
+        android:pathData="M36,30 m-7,0 a7,7 0 1,1 14,0 a7,7 0 1,1 -14,0"
         android:fillColor="#000000" />
+    <!-- Checkmark -->
     <path
-        android:pathData="M33 30l2 2 4 -4"
-        android:strokeColor="#000000"
+        android:pathData="M33,30 L35,32 L39,28"
+        android:strokeColor="#FFFFFF"
         android:strokeWidth="2"
         android:strokeLineCap="round"
         android:strokeLineJoin="round" />
 </vector>
-
