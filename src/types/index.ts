@@ -57,6 +57,13 @@ export type ThemeColorScheme =
   | 'green'
   | 'orange'
   | 'rose'
+  | 'indigo'
+  | 'pink'
+  | 'amber'
+  | 'cyan'
+  | 'red'
+  | 'lime'
+  | 'deepPurple'
   | 'custom'
 
 // 自定义字体

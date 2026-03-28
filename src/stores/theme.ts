@@ -40,6 +40,48 @@ const COLOR_SCHEMES: Record<ThemeColorScheme, { primary: string; primaryContaine
     onPrimary: '#ffffff',
     onPrimaryContainer: '#3F0019',
   },
+  indigo: {
+    primary: '#3F51B5',
+    primaryContainer: '#C5CAE9',
+    onPrimary: '#ffffff',
+    onPrimaryContainer: '#1A237E',
+  },
+  pink: {
+    primary: '#C2185B',
+    primaryContainer: '#F8BBD0',
+    onPrimary: '#ffffff',
+    onPrimaryContainer: '#880E4F',
+  },
+  amber: {
+    primary: '#FF8F00',
+    primaryContainer: '#FFE082',
+    onPrimary: '#000000',
+    onPrimaryContainer: '#FF6F00',
+  },
+  cyan: {
+    primary: '#0097A7',
+    primaryContainer: '#B2EBF2',
+    onPrimary: '#ffffff',
+    onPrimaryContainer: '#006064',
+  },
+  red: {
+    primary: '#D32F2F',
+    primaryContainer: '#FFCDD2',
+    onPrimary: '#ffffff',
+    onPrimaryContainer: '#B71C1C',
+  },
+  lime: {
+    primary: '#689F38',
+    primaryContainer: '#DCEDC8',
+    onPrimary: '#ffffff',
+    onPrimaryContainer: '#33691E',
+  },
+  deepPurple: {
+    primary: '#512DA8',
+    primaryContainer: '#D1C4E9',
+    onPrimary: '#ffffff',
+    onPrimaryContainer: '#311B92',
+  },
   custom: {
     primary: '#006B71',
     primaryContainer: '#9EEFFF',
@@ -96,20 +138,31 @@ export const useThemeStore = defineStore('theme', () => {
       '--md-on-primary': colors.onPrimary,
       '--md-primary-container': colors.primaryContainer,
       '--md-on-primary-container': colors.onPrimaryContainer,
+      // 让背景也染上一点点主色调
+      '--md-surface': dark
+        ? 'color-mix(in srgb, var(--md-primary) 3%, #1C1B1F)'
+        : 'color-mix(in srgb, var(--md-primary) 4%, #FFFBFE)',
+      // Surface 层级容器（由浅到深，都带一点主色调）
+      '--md-surface-container-lowest': dark
+        ? 'color-mix(in srgb, var(--md-primary) 5%, #1C1B1F)'
+        : 'color-mix(in srgb, var(--md-primary) 5%, #FFFBFE)',
+      '--md-surface-container-low': dark
+        ? 'color-mix(in srgb, var(--md-primary) 8%, #1C1B1F)'
+        : 'color-mix(in srgb, var(--md-primary) 7%, #FFFBFE)',
+      '--md-surface-container': dark
+        ? 'color-mix(in srgb, var(--md-primary) 12%, #1C1B1F)'
+        : 'color-mix(in srgb, var(--md-primary) 10%, #FFFBFE)',
+      '--md-surface-container-high': dark
+        ? 'color-mix(in srgb, var(--md-primary) 16%, #1C1B1F)'
+        : 'color-mix(in srgb, var(--md-primary) 14%, #FFFBFE)',
+      '--md-surface-container-highest': dark
+        ? 'color-mix(in srgb, var(--md-primary) 22%, #1C1B1F)'
+        : 'color-mix(in srgb, var(--md-primary) 18%, #FFFBFE)',
       // 让按钮和背景容器跟随主色调进行轻量染色
       '--md-secondary-container': dark
         ? 'color-mix(in srgb, var(--md-primary) 34%, var(--md-surface))'
-        : 'color-mix(in srgb, var(--md-primary) 18%, var(--md-surface))',
+        : 'color-mix(in srgb, var(--md-primary) 25%, var(--md-surface))',
       '--md-on-secondary-container': 'var(--md-on-surface)',
-      '--md-surface-container': dark
-        ? 'color-mix(in srgb, var(--md-primary) 12%, var(--md-surface))'
-        : 'color-mix(in srgb, var(--md-primary) 6%, var(--md-surface))',
-      '--md-surface-container-high': dark
-        ? 'color-mix(in srgb, var(--md-primary) 16%, var(--md-surface))'
-        : 'color-mix(in srgb, var(--md-primary) 9%, var(--md-surface))',
-      '--md-surface-container-highest': dark
-        ? 'color-mix(in srgb, var(--md-primary) 22%, var(--md-surface))'
-        : 'color-mix(in srgb, var(--md-primary) 13%, var(--md-surface))',
     }
   })
 

@@ -28,22 +28,4 @@ export const txtActions: ToolbarAction[] = [
     icon: 'horizontal_rule',
     insertText: '\n' + '='.repeat(50) + '\n',
   },
-  {
-    id: 'txt-indent',
-    label: '缩进',
-    icon: 'format_indent_increase',
-    insertText: (selection) => {
-      if (!selection) return '  '
-      return selection.split('\n').map(line => '  ' + line).join('\n')
-    },
-  },
-  {
-    id: 'txt-outdent',
-    label: '取消缩进',
-    icon: 'format_indent_decrease',
-    insertText: (selection) => {
-      if (!selection) return ''
-      return selection.split('\n').map(line => line.replace(/^  /, '')).join('\n')
-    },
-  },
 ]

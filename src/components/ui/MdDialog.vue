@@ -39,7 +39,7 @@ function onBackdropClick() {
   padding: 24px;
 }
 .dialog-box {
-  background: var(--md-surface-container-high);
+  background: var(--md-surface);
   border-radius: 28px;
   padding: 24px;
   min-width: 280px; max-width: 560px; width: 100%;

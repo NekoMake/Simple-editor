@@ -7,11 +7,12 @@
         class="toolbar-button"
         :class="{ 'is-active': action.isActive?.() }"
         :title="action.label"
-        @click="handleAction(action)"
+        @click="handleAction(action, $event)"
       >
         <div class="icon-indicator">
           <MdIcon :name="action.icon" size="sm" />
           <MdIcon v-if="action.subActions" name="arrow_drop_down" size="sm" class="dropdown-icon" />
+          <span class="ripple"></span>
         </div>
         <span class="toolbar-label">{{ action.label }}</span>
       </button>
@@ -28,10 +29,11 @@
                 v-for="subAction in currentSubActions"
                 :key="subAction.id"
                 class="submenu-button"
-                @click="handleSubAction(subAction)"
+                @click="handleSubAction(subAction, $event)"
               >
                 <MdIcon :name="subAction.icon" size="sm" />
                 <span>{{ subAction.label }}</span>
+                <span class="ripple"></span>
               </button>
             </div>
           </div>
@@ -59,7 +61,33 @@ const isTablet = computed(() => windowWidth.value >= 768)
 const showSubMenu = ref(false)
 const currentSubActions = ref<ToolbarAction[] | null>(null)
 
-function handleAction(action: ToolbarAction) {
+function handleAction(action: ToolbarAction, event: MouseEvent) {
+  // 创建涟漪效果
+  const target = event.currentTarget as HTMLButtonElement
+  if (target) {
+    const indicator = target.querySelector('.icon-indicator') as HTMLElement
+    const ripple = target.querySelector('.ripple') as HTMLElement
+    
+    if (indicator && ripple) {
+      // 获取点击位置相对于 indicator 的坐标
+      const rect = indicator.getBoundingClientRect()
+      const x = event.clientX - rect.left
+      const y = event.clientY - rect.top
+      
+      // 设置涟漪起始位置
+      ripple.style.left = `${x}px`
+      ripple.style.top = `${y}px`
+      
+      // 触发涟漪动画
+      ripple.classList.remove('ripple-animate')
+      void ripple.offsetWidth // 强制重排，重置动画
+      ripple.classList.add('ripple-animate')
+    }
+    
+    // 稍后移除按钮焦点
+    setTimeout(() => target.blur(), 100)
+  }
+  
   if (action.subActions && action.subActions.length > 0) {
     // 有子选项，显示选择菜单
     currentSubActions.value = action.subActions
@@ -70,9 +98,34 @@ function handleAction(action: ToolbarAction) {
   }
 }
 
-function handleSubAction(subAction: ToolbarAction) {
-  showSubMenu.value = false
-  emit('action', subAction)
+function handleSubAction(subAction: ToolbarAction, event: MouseEvent) {
+  // 创建涟漪效果
+  const target = event.currentTarget as HTMLButtonElement
+  if (target) {
+    const ripple = target.querySelector('.ripple') as HTMLElement
+    
+    if (ripple) {
+      // 获取点击位置相对于按钮的坐标
+      const rect = target.getBoundingClientRect()
+      const x = event.clientX - rect.left
+      const y = event.clientY - rect.top
+      
+      // 设置涟漪起始位置
+      ripple.style.left = `${x}px`
+      ripple.style.top = `${y}px`
+      
+      // 触发涟漪动画
+      ripple.classList.remove('ripple-animate')
+      void ripple.offsetWidth // 强制重排，重置动画
+      ripple.classList.add('ripple-animate')
+    }
+  }
+  
+  // 延迟关闭菜单，让涟漪效果可见
+  setTimeout(() => {
+    showSubMenu.value = false
+    emit('action', subAction)
+  }, 150)
 }
 
 function updateWidth() {
@@ -170,18 +223,31 @@ onBeforeUnmount(() => {
   border-radius: 16px;
   transition: background-color 0.2s, color 0.2s;
   position: relative;
+  overflow: hidden;
 }
 
 .is-tablet .icon-indicator {
   width: 56px;
 }
 
-.toolbar-button:hover .icon-indicator {
-  background: var(--md-surface-container-highest);
+/* 只在真正支持 hover 的设备上应用 hover 样式（避免移动端触摸后粘滞） */
+@media (hover: hover) and (pointer: fine) {
+  .toolbar-button:hover .icon-indicator {
+    background: var(--md-surface-container-highest);
+  }
 }
 
 .toolbar-button:active .icon-indicator {
   background: var(--md-surface-container-highest);
+}
+
+.toolbar-button:focus {
+  outline: none;
+}
+
+.toolbar-button:focus-visible .icon-indicator {
+  outline: 2px solid var(--md-primary);
+  outline-offset: 2px;
 }
 
 .toolbar-button.is-active .icon-indicator {
@@ -214,6 +280,49 @@ onBeforeUnmount(() => {
   right: 0px;
   opacity: 0.7;
   transform: scale(0.6);
+}
+
+/* 涟漪效果 */
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(0);
+  width: 100%;
+  height: 100%;
+}
+
+.ripple-animate {
+  animation: ripple-animation 0.6s ease-out;
+}
+
+@keyframes ripple-animation {
+  0% {
+    opacity: 0.3;
+    transform: translate(-50%, -50%) scale(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(2.5);
+  }
+}
+
+/* 子菜单按钮的涟漪效果，扩散范围更大 */
+.submenu-button .ripple {
+  animation: ripple-animation-large 0.6s ease-out;
+}
+
+@keyframes ripple-animation-large {
+  0% {
+    opacity: 0.25;
+    transform: translate(-50%, -50%) scale(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(3);
+  }
 }
 
 /* 子菜单样式 */
@@ -284,10 +393,21 @@ onBeforeUnmount(() => {
   font-size: 13px;
   transition: background-color 0.2s;
   min-height: 80px;
+  position: relative;
+  overflow: hidden;
 }
 
 .submenu-button:active {
   background: var(--md-surface-container-highest);
+}
+
+.submenu-button:focus {
+  outline: none;
+}
+
+.submenu-button:focus-visible {
+  outline: 2px solid var(--md-primary);
+  outline-offset: 2px;
 }
 
 .submenu-enter-active,

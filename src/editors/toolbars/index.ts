@@ -26,6 +26,24 @@ const commonActions: ToolbarAction[] = [
       }
     },
   },
+  {
+    id: 'indent',
+    label: '缩进',
+    icon: 'format_indent_increase',
+    insertText: (selection) => {
+      if (!selection) return '  '
+      return selection.split('\n').map(line => '  ' + line).join('\n')
+    },
+  },
+  {
+    id: 'outdent',
+    label: '取消缩进',
+    icon: 'format_indent_decrease',
+    insertText: (selection) => {
+      if (!selection) return ''
+      return selection.split('\n').map(line => line.replace(/^  /, '')).join('\n')
+    },
+  },
 ]
 
 /**
