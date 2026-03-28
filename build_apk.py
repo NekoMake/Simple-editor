@@ -31,6 +31,8 @@ APK_DEBUG_PATH = ANDROID_DIR / "app/build/outputs/apk/debug/app-debug.apk"
 APK_RELEASE_PATH = ANDROID_DIR / "app/build/outputs/apk/release/app-release-unsigned.apk"
 
 OUTPUT_DIR = PROJECT_ROOT / "output"
+ICON_CONFIGS_DIR = PROJECT_ROOT / "resources/icon-configs"
+ANDROID_RES_DIR = ANDROID_DIR / "app/src/main/res"
 
 GRADLEW = ANDROID_DIR / ("gradlew.bat" if sys.platform == "win32" else "gradlew")
 
@@ -156,6 +158,44 @@ def stage_cap_sync() -> None:
 
     run(["npx", "cap", "sync", "android"], cwd=PROJECT_ROOT)
     success("Capacitor 同步完成")
+
+
+def stage_copy_icon_resources() -> None:
+    """
+    将 resources/icon-configs 中的自定义图标配置复制到 Android res 目录。
+    这一步在 cap sync 之后执行，确保自定义配置不会被 Capacitor 覆盖。
+    """
+    step("复制自定义图标配置（莫奈取色支持）")
+
+    if not ICON_CONFIGS_DIR.exists():
+        info(f"未找到图标配置目录：{ICON_CONFIGS_DIR}，跳过")
+        return
+
+    if not ANDROID_RES_DIR.exists():
+        error(f"Android res 目录不存在：{ANDROID_RES_DIR}")
+        return
+
+    copied_count = 0
+    
+    # 遍历 icon-configs 目录下的所有文件
+    for src_file in ICON_CONFIGS_DIR.rglob("*"):
+        if src_file.is_file() and src_file.suffix != ".md":
+            # 计算相对路径
+            rel_path = src_file.relative_to(ICON_CONFIGS_DIR)
+            dest_file = ANDROID_RES_DIR / rel_path
+            
+            # 创建目标目录
+            dest_file.parent.mkdir(parents=True, exist_ok=True)
+            
+            # 复制文件
+            shutil.copy2(src_file, dest_file)
+            info(f"  {rel_path}")
+            copied_count += 1
+
+    if copied_count > 0:
+        success(f"已复制 {copied_count} 个图标配置文件")
+    else:
+        info("没有需要复制的图标配置文件")
 
 
 def stage_gradle_clean() -> None:
@@ -298,6 +338,7 @@ def main() -> None:
     if not args.skip_web:
         stage_npm_build()
         stage_cap_sync()
+        stage_copy_icon_resources()  # 在 cap sync 后复制图标配置，避免被覆盖
     else:
         info("已跳过 Web 构建和 cap sync（--skip-web）")
 
