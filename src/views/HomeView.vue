@@ -311,7 +311,7 @@ async function doDelete() {
 /* ---- Hero 头部 ---- */
 .home-hero {
   flex-shrink: 0;
-  background: var(--md-primary-container);
+  background-color: var(--md-primary-container);
   padding: 0 8px 16px;
   position: relative;
   min-height: 160px;

@@ -65,12 +65,4 @@ export const jsonActions: ToolbarAction[] = [
     icon: 'data_object',
     insertText: '{\n  \n}',
   },
-  {
-    id: 'json-format',
-    label: '格式化',
-    icon: 'auto_fix_high',
-    handler: () => {
-      // 这个将在集成时实现
-    },
-  },
 ]

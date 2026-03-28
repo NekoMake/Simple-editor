@@ -194,7 +194,7 @@ async function doExport() {
  * 处理工具栏操作
  */
 function handleToolbarAction(action: ToolbarAction) {
-  if (!editorRef.value) return
+  if (!editorRef.value || !file.value) return
   
   // 内置特例处理：Markdown大纲
   if (action.id === 'md-outline') {
@@ -206,9 +206,16 @@ function handleToolbarAction(action: ToolbarAction) {
     return
   }
 
-  // 如果有自定义处理器，优先执行
+  // 如果有自定义处理器，优先执行（传入编辑器上下文）
   if (action.handler) {
-    action.handler()
+    action.handler({
+      getContent: () => content.value,
+      setContent: (text: string) => { content.value = text },
+      format: file.value.format,
+      showMessage: (msg: string, isError?: boolean) => {
+        uiStore.showSnackbar(msg)
+      },
+    })
     return
   }
   
