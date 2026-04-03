@@ -1,10 +1,26 @@
-import { EditorState, type Extension, StateField, StateEffect } from '@codemirror/state'
+import { EditorState, type Extension, StateField, StateEffect, Transaction } from '@codemirror/state'
 import { EditorView, keymap, lineNumbers, highlightActiveLine, Decoration, type DecorationSet, WidgetType } from '@codemirror/view'
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands'
 import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete'
 import { lintKeymap, diagnosticCount, forEachDiagnostic } from '@codemirror/lint'
 import { indentOnInput, syntaxHighlighting, HighlightStyle, bracketMatching } from '@codemirror/language'
 import { tags as t } from '@lezer/highlight'
+
+/**
+ * IME 组合输入状态管理
+ * 用于在输入法组合输入（如中文拼音选字）期间禁用某些扩展，防止干扰输入
+ */
+const setComposing = StateEffect.define<boolean>()
+
+const composingState = StateField.define<boolean>({
+  create: () => false,
+  update(value, tr) {
+    for (const effect of tr.effects) {
+      if (effect.is(setComposing)) return effect.value
+    }
+    return value
+  },
+})
 
 const dynamicThemeHighlightStyle = HighlightStyle.define([
   { tag: t.keyword, color: 'var(--md-primary)', fontWeight: 'bold' },
@@ -167,10 +183,45 @@ export function buildBaseExtensions(options: {
   onChange: (value: string) => void
   isDark: boolean
 }): Extension[] {
+  // IME 组合输入事件处理器
+  const compositionHandler = EditorView.domEventHandlers({
+    compositionstart(event, view) {
+      view.dispatch({ effects: setComposing.of(true) })
+      return false
+    },
+    compositionend(event, view) {
+      view.dispatch({ effects: setComposing.of(false) })
+      return false
+    },
+  })
+
+  // 在 composition 期间过滤可能干扰输入的事务
+  const compositionProtection = EditorState.transactionFilter.of((tr) => {
+    // 如果当前处于 composition 状态，且事务包含文档修改
+    if (tr.state.field(composingState, false) && tr.docChanged) {
+      // 只允许用户输入类型的修改，过滤掉其他类型的修改（如自动补全、自动缩进等）
+      // 用户输入会有 userEvent 注解
+      const userEvent = tr.annotation(Transaction.userEvent)
+      // 允许 input（用户输入）、delete（用户删除）
+      if (userEvent && (userEvent.startsWith('input') || userEvent.startsWith('delete'))) {
+        return tr
+      }
+      // 如果没有 userEvent 注解，或者是其他类型的事件，则过滤掉
+      // 但保留不修改文档的事务（如选择变化、状态更新等）
+      return []
+    }
+    return tr
+  })
+
   const exts: Extension[] = [
+    // IME 组合输入状态追踪
+    composingState,
+    compositionHandler,
+    compositionProtection,
     history(),
     syntaxHighlighting(dynamicThemeHighlightStyle, { fallback: true }),
     bracketMatching(),
+    // 在 composition 期间禁用括号自动补全，避免干扰输入法选字
     closeBrackets(),
     indentOnInput(),
     highlightActiveLine(),
